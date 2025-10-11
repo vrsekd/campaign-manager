@@ -10,24 +10,26 @@ import {
   Toast,
   Frame,
   Modal,
-  TextContainer,
   type TabProps,
   type IndexFiltersProps,
 } from "@shopify/polaris";
 import type { Campaign } from "../../../backend/types/campaign";
 import { DeleteIcon } from "@shopify/polaris-icons";
 import { useCampaignMutations } from "../../hooks/campaign";
+import { CampaignEdit } from "./CampaignEdit";
 
 interface CampaignListProps {
   campaigns: Campaign[];
   onCampaignSelect?: (campaignIds: string[]) => void;
   onCampaignsDeleted?: () => void;
+  onCampaignUpdated?: () => void;
 }
 
 export function CampaignList({
   campaigns,
   onCampaignSelect,
   onCampaignsDeleted,
+  onCampaignUpdated,
 }: CampaignListProps) {
   const breakpoints = useBreakpoints();
   const { deleteCampaign } = useCampaignMutations();
@@ -36,6 +38,10 @@ export function CampaignList({
   const [toastError, setToastError] = useState(false);
   const [deleteModalActive, setDeleteModalActive] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editModalActive, setEditModalActive] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
+    null,
+  );
 
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
@@ -190,6 +196,25 @@ export function CampaignList({
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState(formattedCampaigns);
 
+  const handleRowClick = (campaignId: string) => {
+    const campaign = campaigns.find((c) => c.id === campaignId);
+    if (campaign) {
+      setSelectedCampaign(campaign);
+      setEditModalActive(true);
+    }
+  };
+
+  const handleEditClose = () => {
+    setEditModalActive(false);
+    setSelectedCampaign(null);
+  };
+
+  const handleEditSuccess = () => {
+    if (onCampaignUpdated) {
+      onCampaignUpdated();
+    }
+  };
+
   const rowMarkup = formattedCampaigns.map(
     ({ id, name, banner, dateStart, dateEnd, status }, index) => (
       <IndexTable.Row
@@ -197,6 +222,7 @@ export function CampaignList({
         key={id}
         selected={selectedResources.includes(id)}
         position={index}
+        onClick={() => handleRowClick(id)}
       >
         <IndexTable.Cell>
           <Text variant="bodyMd" fontWeight="bold" as="span">
@@ -222,6 +248,12 @@ export function CampaignList({
   return (
     <Frame>
       {toastMarkup}
+      <CampaignEdit
+        open={editModalActive}
+        onClose={handleEditClose}
+        onCampaignUpdated={handleEditSuccess}
+        campaign={selectedCampaign}
+      />
       <Modal
         open={deleteModalActive}
         onClose={() => setDeleteModalActive(false)}
@@ -240,7 +272,7 @@ export function CampaignList({
         ]}
       >
         <Modal.Section>
-          <TextContainer>
+          <Text as="p">
             <p>
               Are you sure you want to delete{" "}
               <Text as="span" fontWeight="bold">
@@ -248,32 +280,10 @@ export function CampaignList({
               </Text>{" "}
               campaign(s)? This action cannot be undone.
             </p>
-          </TextContainer>
+          </Text>
         </Modal.Section>
       </Modal>
-      <IndexFilters
-        sortOptions={sortOptions}
-        sortSelected={sortSelected}
-        queryValue={queryValue}
-        queryPlaceholder="Searching in all"
-        onQueryChange={() => setQueryValue("")}
-        onQueryClear={() => setQueryValue("")}
-        onSort={setSortSelected}
-        primaryAction={primaryAction}
-        cancelAction={{
-          onAction: onHandleCancel,
-          disabled: false,
-          loading: false,
-        }}
-        tabs={tabs}
-        selected={selected}
-        onSelect={setSelected}
-        canCreateNewView={false}
-        filters={[]}
-        mode={mode}
-        setMode={setMode}
-        onClearAll={() => setQueryValue("")}
-      />
+
       <IndexTable
         condensed={breakpoints.smDown}
         resourceName={resourceName}
