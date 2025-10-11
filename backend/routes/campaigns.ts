@@ -1,0 +1,234 @@
+import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import { z } from "zod";
+
+const createCampaignSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  banner: z.string().optional(),
+  status: z
+    .enum(["draft", "active", "paused", "completed"])
+    .optional()
+    .default("draft"),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+});
+
+const updateCampaignSchema = z.object({
+  name: z.string().min(1).optional(),
+  banner: z.string().optional(),
+  status: z.enum(["draft", "active", "paused", "completed"]).optional(),
+  startDate: z.string().datetime().optional().nullable(),
+  endDate: z.string().datetime().optional().nullable(),
+});
+
+const idParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+type CreateCampaignBody = z.infer<typeof createCampaignSchema>;
+type UpdateCampaignBody = z.infer<typeof updateCampaignSchema>;
+type IdParam = z.infer<typeof idParamSchema>;
+
+export default async function campaignRoutes(fastify: FastifyInstance) {
+  fastify.get(
+    "/campaigns",
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const campaigns = await fastify.prisma.campaign.findMany({
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+        return reply.code(200).send(campaigns);
+      } catch (error) {
+        fastify.log.error(error);
+        return reply.code(500).send({
+          error: "Internal Server Error",
+          message: "Failed to fetch campaigns",
+        });
+      }
+    },
+  );
+
+  fastify.get<{ Params: IdParam }>(
+    "/campaigns/:id",
+    async (
+      request: FastifyRequest<{ Params: IdParam }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = idParamSchema.parse(request.params);
+
+        const campaign = await fastify.prisma.campaign.findUnique({
+          where: { id },
+        });
+
+        if (!campaign) {
+          return reply.code(404).send({
+            error: "Not Found",
+            message: "Campaign not found",
+          });
+        }
+
+        return reply.code(200).send(campaign);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            error: "Bad Request",
+            message: "Invalid campaign ID",
+            details: error.errors,
+          });
+        }
+        fastify.log.error(error);
+        return reply.code(500).send({
+          error: "Internal Server Error",
+          message: "Failed to fetch campaign",
+        });
+      }
+    },
+  );
+
+  fastify.post<{ Body: CreateCampaignBody }>(
+    "/campaigns",
+    async (
+      request: FastifyRequest<{ Body: CreateCampaignBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const validatedData = createCampaignSchema.parse(request.body);
+
+        const campaign = await fastify.prisma.campaign.create({
+          data: {
+            name: validatedData.name,
+            banner: validatedData.banner,
+            status: validatedData.status,
+            startDate: validatedData.startDate
+              ? new Date(validatedData.startDate)
+              : null,
+            endDate: validatedData.endDate
+              ? new Date(validatedData.endDate)
+              : null,
+          },
+        });
+
+        return reply.code(201).send(campaign);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            error: "Bad Request",
+            message: "Validation failed",
+            details: error.errors,
+          });
+        }
+        fastify.log.error(error);
+        return reply.code(500).send({
+          error: "Internal Server Error",
+          message: "Failed to create campaign",
+        });
+      }
+    },
+  );
+
+  fastify.put<{ Params: IdParam; Body: UpdateCampaignBody }>(
+    "/campaigns/:id",
+    async (
+      request: FastifyRequest<{ Params: IdParam; Body: UpdateCampaignBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = idParamSchema.parse(request.params);
+        const validatedData = updateCampaignSchema.parse(request.body);
+
+        const existingCampaign = await fastify.prisma.campaign.findUnique({
+          where: { id },
+        });
+
+        if (!existingCampaign) {
+          return reply.code(404).send({
+            error: "Not Found",
+            message: "Campaign not found",
+          });
+        }
+
+        const updateData: any = {};
+        if (validatedData.name !== undefined)
+          updateData.name = validatedData.name;
+        if (validatedData.banner !== undefined)
+          updateData.banner = validatedData.banner;
+        if (validatedData.status !== undefined)
+          updateData.status = validatedData.status;
+        if (validatedData.startDate !== undefined) {
+          updateData.startDate = validatedData.startDate
+            ? new Date(validatedData.startDate)
+            : null;
+        }
+        if (validatedData.endDate !== undefined) {
+          updateData.endDate = validatedData.endDate
+            ? new Date(validatedData.endDate)
+            : null;
+        }
+
+        const campaign = await fastify.prisma.campaign.update({
+          where: { id },
+          data: updateData,
+        });
+
+        return reply.code(200).send(campaign);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            error: "Bad Request",
+            message: "Validation failed",
+            details: error.errors,
+          });
+        }
+        fastify.log.error(error);
+        return reply.code(500).send({
+          error: "Internal Server Error",
+          message: "Failed to update campaign",
+        });
+      }
+    },
+  );
+
+  fastify.delete<{ Params: IdParam }>(
+    "/campaigns/:id",
+    async (
+      request: FastifyRequest<{ Params: IdParam }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { id } = idParamSchema.parse(request.params);
+
+        const existingCampaign = await fastify.prisma.campaign.findUnique({
+          where: { id },
+        });
+
+        if (!existingCampaign) {
+          return reply.code(404).send({
+            error: "Not Found",
+            message: "Campaign not found",
+          });
+        }
+
+        await fastify.prisma.campaign.delete({
+          where: { id },
+        });
+
+        return reply.code(204).send();
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            error: "Bad Request",
+            message: "Invalid campaign ID",
+            details: error.errors,
+          });
+        }
+        fastify.log.error(error);
+        return reply.code(500).send({
+          error: "Internal Server Error",
+          message: "Failed to delete campaign",
+        });
+      }
+    },
+  );
+}

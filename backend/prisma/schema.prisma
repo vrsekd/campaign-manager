@@ -1,0 +1,23 @@
+// Backend Prisma schema for Campaign Manager
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.sqlite"
+}
+
+model Campaign {
+  id        String    @id @default(uuid())
+  name      String
+  banner    String?
+  status    String    @default("draft") // draft, active, paused, completed
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
