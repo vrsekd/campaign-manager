@@ -106,6 +106,33 @@ export class CampaignApiClient {
       throw new Error(`Failed to delete campaign: ${response.statusText}`);
     }
   }
+
+  /**
+   * Get checkout banner for products
+   * Returns banner text if any active campaign matches the provided products
+   */
+  async getCheckoutBanner(productIds: string[]): Promise<{
+    banner: string | null;
+    campaignId?: string;
+    campaignName?: string;
+    priority?: number;
+  }> {
+    const response = await fetch(`${this.baseUrl}/campaigns/checkout-banner`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ productIds }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch checkout banner: ${response.statusText}`,
+      );
+    }
+
+    return response.json();
+  }
 }
 
 // Export a singleton instance

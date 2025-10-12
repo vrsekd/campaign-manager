@@ -1,6 +1,12 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { z } from "zod";
 
+const checkoutBannerSchema = z.object({
+  productIds: z.array(z.string()).min(1, "At least one product ID is required"),
+});
+
+type CheckoutBannerBody = z.infer<typeof checkoutBannerSchema>;
+
 const createCampaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
@@ -242,6 +248,88 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
         return reply.code(500).send({
           error: "Internal Server Error",
           message: "Failed to delete campaign",
+        });
+      }
+    },
+  );
+
+  // POST get checkout banner for products
+  fastify.post<{ Body: CheckoutBannerBody }>(
+    "/campaigns/checkout",
+    async (
+      request: FastifyRequest<{ Body: CheckoutBannerBody }>,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { productIds } = checkoutBannerSchema.parse(request.body);
+        const currentDate = new Date();
+
+        // Find all active campaigns that match the criteria
+        const campaigns = await fastify.prisma.campaign.findMany({
+          where: {
+            status: "active",
+            startDate: {
+              lte: currentDate, // Start date is less than or equal to now
+            },
+            endDate: {
+              gte: currentDate, // End date is greater than or equal to now
+            },
+          },
+          orderBy: {
+            priority: "desc", // Highest priority first
+          },
+        });
+
+        // Find campaigns that contain any of the provided products
+        for (const campaign of campaigns) {
+          if (campaign.products) {
+            try {
+              const campaignProducts = JSON.parse(campaign.products);
+              const productGids = Array.isArray(campaignProducts)
+                ? campaignProducts.map((p: any) =>
+                    typeof p === "string" ? p : p.id,
+                  )
+                : [];
+
+              // Check if any provided product ID matches campaign products
+              const hasMatchingProduct = productIds.some((productId) =>
+                productGids.some((gid: string) => gid.includes(productId)),
+              );
+
+              if (hasMatchingProduct && campaign.checkoutBanner) {
+                // Return the first matching campaign's banner
+                return reply.code(200).send({
+                  banner: campaign.checkoutBanner,
+                  campaignId: campaign.id,
+                  campaignName: campaign.name,
+                  priority: campaign.priority,
+                });
+              }
+            } catch (error) {
+              fastify.log.warn(
+                `Failed to parse products for campaign ${campaign.id}`,
+              );
+              continue;
+            }
+          }
+        }
+
+        // No matching campaign found
+        return reply.code(200).send({
+          banner: null,
+        });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            error: "Bad Request",
+            message: "Validation failed",
+            details: error.errors,
+          });
+        }
+        fastify.log.error(error);
+        return reply.code(500).send({
+          error: "Internal Server Error",
+          message: "Failed to fetch checkout banner",
         });
       }
     },

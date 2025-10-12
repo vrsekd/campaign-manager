@@ -74,6 +74,7 @@ npm run start
 - `POST /api/campaigns` - Create a new campaign
 - `PUT /api/campaigns/:id` - Update a campaign
 - `DELETE /api/campaigns/:id` - Delete a campaign
+- `POST /api/campaigns/checkout-banner` - Get banner for checkout (used in extensions)
 
 ### Campaign Schema
 
