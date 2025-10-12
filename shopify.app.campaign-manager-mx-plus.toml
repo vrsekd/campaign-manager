@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "8bc761066747cf2ff0dc8c7ead9e0278"
-name = "Campaign Manager"
+client_id = "235a1ada56f259be5c3168eb7bd3ebd6"
+name = "campaign-manager"
 application_url = "https://example.com"
 embedded = true
 
@@ -12,17 +12,9 @@ include_config_on_deploy = true
 [webhooks]
 api_version = "2026-01"
 
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
-  uri = "/webhooks/app/scopes_update"
-
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products, read_products"
+scopes = "read_products,write_products"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]

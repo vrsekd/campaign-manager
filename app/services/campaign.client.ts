@@ -117,7 +117,7 @@ export class CampaignApiClient {
     campaignName?: string;
     priority?: number;
   }> {
-    const response = await fetch(`${this.baseUrl}/campaigns/checkout-banner`, {
+    const response = await fetch(`${this.baseUrl}/campaigns/checkout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
