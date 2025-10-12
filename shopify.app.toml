@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "8bc761066747cf2ff0dc8c7ead9e0278"
-name = "campaign-manager"
+name = "Campaign Manager"
 application_url = "https://example.com"
 embedded = true
 

@@ -3,21 +3,27 @@ import { z } from "zod";
 
 const createCampaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  banner: z.string().optional(),
+  description: z.string().optional(),
+  checkoutBanner: z.string().optional(),
   status: z
     .enum(["draft", "active", "paused", "completed"])
     .optional()
     .default("draft"),
+  priority: z.number().int().optional().default(0),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
+  products: z.string().optional(), // JSON string
 });
 
 const updateCampaignSchema = z.object({
   name: z.string().min(1).optional(),
-  banner: z.string().optional(),
+  description: z.string().optional(),
+  checkoutBanner: z.string().optional(),
   status: z.enum(["draft", "active", "paused", "completed"]).optional(),
+  priority: z.number().int().optional(),
   startDate: z.string().datetime().optional().nullable(),
   endDate: z.string().datetime().optional().nullable(),
+  products: z.string().optional().nullable(), // JSON string
 });
 
 const idParamSchema = z.object({
@@ -99,14 +105,17 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
         const campaign = await fastify.prisma.campaign.create({
           data: {
             name: validatedData.name,
-            banner: validatedData.banner,
+            description: validatedData.description,
+            checkoutBanner: validatedData.checkoutBanner,
             status: validatedData.status,
+            priority: validatedData.priority,
             startDate: validatedData.startDate
               ? new Date(validatedData.startDate)
               : null,
             endDate: validatedData.endDate
               ? new Date(validatedData.endDate)
               : null,
+            products: validatedData.products,
           },
         });
 
@@ -152,10 +161,14 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
         const updateData: any = {};
         if (validatedData.name !== undefined)
           updateData.name = validatedData.name;
-        if (validatedData.banner !== undefined)
-          updateData.banner = validatedData.banner;
+        if (validatedData.description !== undefined)
+          updateData.description = validatedData.description;
+        if (validatedData.checkoutBanner !== undefined)
+          updateData.checkoutBanner = validatedData.checkoutBanner;
         if (validatedData.status !== undefined)
           updateData.status = validatedData.status;
+        if (validatedData.priority !== undefined)
+          updateData.priority = validatedData.priority;
         if (validatedData.startDate !== undefined) {
           updateData.startDate = validatedData.startDate
             ? new Date(validatedData.startDate)
@@ -166,6 +179,8 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
             ? new Date(validatedData.endDate)
             : null;
         }
+        if (validatedData.products !== undefined)
+          updateData.products = validatedData.products;
 
         const campaign = await fastify.prisma.campaign.update({
           where: { id },

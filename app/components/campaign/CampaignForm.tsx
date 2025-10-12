@@ -8,8 +8,13 @@ import {
   DatePicker,
   Popover,
   Icon,
+  Button,
+  InlineStack,
+  BlockStack,
+  Text,
+  Tag,
 } from "@shopify/polaris";
-import { CalendarIcon } from "@shopify/polaris-icons";
+import { CalendarIcon, ProductIcon } from "@shopify/polaris-icons";
 import { useCampaignMutations } from "../../hooks/campaign";
 import type {
   Campaign,
@@ -36,8 +41,10 @@ export function CampaignForm({
 
   const [formData, setFormData] = useState({
     name: "",
-    banner: "",
+    description: "",
+    checkoutBanner: "",
     status: "draft" as const,
+    priority: 0,
   });
 
   const [startDatePickerActive, setStartDatePickerActive] = useState(false);
@@ -48,6 +55,9 @@ export function CampaignForm({
   const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(
     undefined,
   );
+  const [selectedProducts, setSelectedProducts] = useState<
+    Array<{ id: string; title: string }>
+  >([]);
 
   const [toastActive, setToastActive] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -58,8 +68,10 @@ export function CampaignForm({
     if (campaign) {
       setFormData({
         name: campaign.name,
-        banner: campaign.banner || "",
+        description: campaign.description || "",
+        checkoutBanner: campaign.checkoutBanner || "",
         status: campaign.status as any,
+        priority: campaign.priority,
       });
       setSelectedStartDate(
         campaign.startDate ? new Date(campaign.startDate) : undefined,
@@ -67,6 +79,29 @@ export function CampaignForm({
       setSelectedEndDate(
         campaign.endDate ? new Date(campaign.endDate) : undefined,
       );
+      // Parse products if available
+      if (campaign.products) {
+        try {
+          const productData = JSON.parse(campaign.products);
+          // Handle both old format (array of strings) and new format (array of objects)
+          if (Array.isArray(productData)) {
+            if (productData.length > 0 && typeof productData[0] === "string") {
+              // Old format: convert to new format
+              setSelectedProducts(
+                productData.map((gid) => ({
+                  id: gid,
+                  title: `Product ${gid.split("/").pop()}`,
+                })),
+              );
+            } else {
+              // New format
+              setSelectedProducts(productData);
+            }
+          }
+        } catch {
+          setSelectedProducts([]);
+        }
+      }
     }
   }, [campaign]);
 
@@ -82,12 +117,11 @@ export function CampaignForm({
       // Update existing campaign
       const updateData: UpdateCampaignInput = {
         name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        checkoutBanner: formData.checkoutBanner.trim() || undefined,
         status: formData.status,
+        priority: formData.priority,
       };
-
-      if (formData.banner !== undefined) {
-        updateData.banner = formData.banner.trim() || undefined;
-      }
 
       if (selectedStartDate) {
         updateData.startDate = selectedStartDate.toISOString();
@@ -95,6 +129,12 @@ export function CampaignForm({
 
       if (selectedEndDate) {
         updateData.endDate = selectedEndDate.toISOString();
+      }
+
+      if (selectedProducts.length > 0) {
+        updateData.products = JSON.stringify(
+          selectedProducts.map((p) => ({ id: p.id, title: p.title })),
+        );
       }
 
       const updated = await updateCampaign(campaign.id, updateData);
@@ -117,12 +157,11 @@ export function CampaignForm({
       // Create new campaign
       const submitData: CreateCampaignInput = {
         name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        checkoutBanner: formData.checkoutBanner.trim() || undefined,
         status: formData.status,
+        priority: formData.priority,
       };
-
-      if (formData.banner?.trim()) {
-        submitData.banner = formData.banner.trim();
-      }
 
       if (selectedStartDate) {
         submitData.startDate = selectedStartDate.toISOString();
@@ -130,6 +169,12 @@ export function CampaignForm({
 
       if (selectedEndDate) {
         submitData.endDate = selectedEndDate.toISOString();
+      }
+
+      if (selectedProducts.length > 0) {
+        submitData.products = JSON.stringify(
+          selectedProducts.map((p) => ({ id: p.id, title: p.title })),
+        );
       }
 
       const created = await createCampaign(submitData);
@@ -142,11 +187,14 @@ export function CampaignForm({
         // Reset form
         setFormData({
           name: "",
-          banner: "",
+          description: "",
+          checkoutBanner: "",
           status: "draft",
+          priority: 0,
         });
         setSelectedStartDate(undefined);
         setSelectedEndDate(undefined);
+        setSelectedProducts([]);
 
         if (onSuccess) {
           onSuccess();
@@ -164,6 +212,7 @@ export function CampaignForm({
     campaign,
     selectedStartDate,
     selectedEndDate,
+    selectedProducts,
     createCampaign,
     updateCampaign,
     createState.error,
@@ -203,6 +252,54 @@ export function CampaignForm({
   const handleEndDateChange = ({ start }: { start: Date; end: Date }) => {
     setSelectedEndDate(start);
     setEndDatePickerActive(false);
+  };
+
+  const handleSelectProducts = async () => {
+    try {
+      // Use Shopify Resource Picker for product selection
+      if (
+        typeof window !== "undefined" &&
+        (window as any).shopify?.resourcePicker
+      ) {
+        const selected = await (window as any).shopify.resourcePicker({
+          type: "product",
+          multiple: true,
+        });
+
+        if (selected && selected.length > 0) {
+          // Add selected products with their IDs and titles
+          const newProducts = selected
+            .map((product: any) => ({
+              id: product.id,
+              title: product.title || `Product ${product.id.split("/").pop()}`,
+            }))
+            .filter(
+              (product: { id: string; title: string }) =>
+                !selectedProducts.some((p) => p.id === product.id),
+            );
+
+          if (newProducts.length > 0) {
+            setSelectedProducts([...selectedProducts, ...newProducts]);
+          }
+        }
+      } else {
+        // Fallback for development/testing
+        setToastMessage(
+          "Product selection requires running in Shopify admin context",
+        );
+        setToastError(true);
+        setToastActive(true);
+      }
+    } catch (error) {
+      console.error("Error selecting products:", error);
+      setToastMessage("Failed to select products");
+      setToastError(true);
+      setToastActive(true);
+    }
+  };
+
+  const handleRemoveProduct = (productId: string) => {
+    setSelectedProducts(selectedProducts.filter((p) => p.id !== productId));
   };
 
   if (!open) return null;
@@ -248,22 +345,50 @@ export function CampaignForm({
             />
 
             <TextField
-              label="Banner"
-              value={formData.banner}
-              onChange={(value) => setFormData({ ...formData, banner: value })}
-              placeholder="e.g., Hot summer deals - up to 70% off!"
+              label="Description"
+              value={formData.description}
+              onChange={(value) =>
+                setFormData({ ...formData, description: value })
+              }
+              placeholder="Campaign description"
               autoComplete="off"
-              helpText="Optional banner text to display"
+              multiline={3}
+              helpText="Internal description of the campaign"
             />
 
-            <Select
-              label="Status"
-              options={statusOptions}
-              value={formData.status}
+            <TextField
+              label="Checkout banner content"
+              value={formData.checkoutBanner}
               onChange={(value) =>
-                setFormData({ ...formData, status: value as any })
+                setFormData({ ...formData, checkoutBanner: value })
               }
+              placeholder="e.g., Hot summer deals - up to 70% off!"
+              autoComplete="off"
+              multiline={2}
+              helpText="Banner text shown at checkout"
             />
+
+            <FormLayout.Group>
+              <Select
+                label="Status"
+                options={statusOptions}
+                value={formData.status}
+                onChange={(value) =>
+                  setFormData({ ...formData, status: value as any })
+                }
+              />
+
+              <TextField
+                label="Priority"
+                type="number"
+                value={formData.priority.toString()}
+                onChange={(value) =>
+                  setFormData({ ...formData, priority: parseInt(value) || 0 })
+                }
+                autoComplete="off"
+                helpText="Higher priority campaigns show first"
+              />
+            </FormLayout.Group>
 
             <Popover
               active={startDatePickerActive}
@@ -326,6 +451,38 @@ export function CampaignForm({
                 selected={selectedEndDate}
               />
             </Popover>
+
+            <BlockStack gap="200">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h3" variant="headingSm">
+                  Products
+                </Text>
+                <Button
+                  onClick={handleSelectProducts}
+                  icon={ProductIcon}
+                  size="slim"
+                >
+                  Select products
+                </Button>
+              </InlineStack>
+
+              {selectedProducts.length > 0 ? (
+                <InlineStack gap="200" wrap>
+                  {selectedProducts.map((product) => (
+                    <Tag
+                      key={product.id}
+                      onRemove={() => handleRemoveProduct(product.id)}
+                    >
+                      {product.title}
+                    </Tag>
+                  ))}
+                </InlineStack>
+              ) : (
+                <Text as="p" variant="bodySm" tone="subdued">
+                  No products selected
+                </Text>
+              )}
+            </BlockStack>
           </FormLayout>
         </Modal.Section>
       </Modal>

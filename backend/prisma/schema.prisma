@@ -11,13 +11,16 @@ datasource db {
 }
 
 model Campaign {
-  id        String    @id @default(uuid())
-  name      String
-  banner    String?
-  status    String    @default("draft") // draft, active, paused, completed
-  startDate DateTime?
-  endDate   DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  name            String
+  description     String?
+  checkoutBanner  String?
+  status          String    @default("draft") // draft, active, paused, completed
+  priority        Int       @default(0)
+  startDate       DateTime?
+  endDate         DateTime?
+  products        String?   // JSON string of product GIDs
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 

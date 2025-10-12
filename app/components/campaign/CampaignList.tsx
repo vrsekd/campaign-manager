@@ -1,8 +1,6 @@
 import { useState } from "react";
 import {
   IndexTable,
-  IndexFilters,
-  useSetIndexFiltersMode,
   useIndexResourceState,
   Text,
   Badge,
@@ -10,8 +8,6 @@ import {
   Toast,
   Frame,
   Modal,
-  type TabProps,
-  type IndexFiltersProps,
 } from "@shopify/polaris";
 import type { Campaign } from "../../../backend/types/campaign";
 import { DeleteIcon } from "@shopify/polaris-icons";
@@ -42,61 +38,6 @@ export function CampaignList({
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null,
   );
-
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
-  const [itemStrings, setItemStrings] = useState(["All", "Active", "Inactive"]);
-
-  const tabs: TabProps[] = itemStrings.map((item, index) => ({
-    content: item,
-    index,
-    onAction: () => {},
-    id: `${item}-${index}`,
-    isLocked: index === 0,
-    actions: [],
-  }));
-
-  const [selected, setSelected] = useState(0);
-
-  const onCreateNewView = async (value: string) => {
-    await sleep(500);
-    setItemStrings([...itemStrings, value]);
-    setSelected(itemStrings.length);
-    return true;
-  };
-
-  const sortOptions: IndexFiltersProps["sortOptions"] = [
-    { label: "Campaign name", value: "order asc", directionLabel: "Ascending" },
-    {
-      label: "Campaign name",
-      value: "order desc",
-      directionLabel: "Descending",
-    },
-  ];
-
-  const [sortSelected, setSortSelected] = useState(["order asc"]);
-  const { mode, setMode } = useSetIndexFiltersMode();
-  const onHandleCancel = () => {};
-
-  const onHandleSave = async () => {
-    await sleep(1);
-    return true;
-  };
-
-  const primaryAction: IndexFiltersProps["primaryAction"] =
-    selected === 0
-      ? {
-          type: "save-as",
-          onAction: onCreateNewView,
-          disabled: false,
-          loading: false,
-        }
-      : {
-          type: "save",
-          onAction: onHandleSave,
-          disabled: false,
-          loading: false,
-        };
 
   const handleBulkDeleteClick = () => {
     setDeleteModalActive(true);
@@ -145,8 +86,6 @@ export function CampaignList({
     },
   ];
 
-  const [queryValue, setQueryValue] = useState("");
-
   // Format date for display
   const formatDate = (date: Date | null) => {
     if (!date) return "Not set";
@@ -182,10 +121,21 @@ export function CampaignList({
         {campaign.name}
       </Text>
     ),
-    banner: campaign.banner || "No banner",
+    description: campaign.description || "—",
+    checkoutBanner: campaign.checkoutBanner || "—",
+    priority: campaign.priority,
     dateStart: formatDate(campaign.startDate),
     dateEnd: formatDate(campaign.endDate),
     status: getStatusBadge(campaign.status),
+    productCount: campaign.products
+      ? (() => {
+          try {
+            return JSON.parse(campaign.products).length;
+          } catch {
+            return 0;
+          }
+        })()
+      : 0,
   }));
 
   const resourceName = {
@@ -216,7 +166,19 @@ export function CampaignList({
   };
 
   const rowMarkup = formattedCampaigns.map(
-    ({ id, name, banner, dateStart, dateEnd, status }, index) => (
+    (
+      {
+        id,
+        name,
+        description,
+        priority,
+        productCount,
+        dateStart,
+        dateEnd,
+        status,
+      },
+      index,
+    ) => (
       <IndexTable.Row
         id={id}
         key={id}
@@ -229,7 +191,13 @@ export function CampaignList({
             {name}
           </Text>
         </IndexTable.Cell>
-        <IndexTable.Cell>{banner}</IndexTable.Cell>
+        <IndexTable.Cell>
+          <Text as="span" variant="bodySm" tone="subdued">
+            {description}
+          </Text>
+        </IndexTable.Cell>
+        <IndexTable.Cell>{priority}</IndexTable.Cell>
+        <IndexTable.Cell>{productCount} products</IndexTable.Cell>
         <IndexTable.Cell>{dateStart}</IndexTable.Cell>
         <IndexTable.Cell>{dateEnd}</IndexTable.Cell>
         <IndexTable.Cell>{status}</IndexTable.Cell>
@@ -288,15 +256,18 @@ export function CampaignList({
         condensed={breakpoints.smDown}
         resourceName={resourceName}
         itemCount={formattedCampaigns.length}
+        hasZebraStriping={true}
         selectedItemsCount={
           allResourcesSelected ? "All" : selectedResources.length
         }
         onSelectionChange={handleSelectionChange}
         headings={[
           { title: "Campaign name" },
-          { title: "Banner" },
-          { title: "Date start" },
-          { title: "Date end" },
+          { title: "Description" },
+          { title: "Priority" },
+          { title: "Products" },
+          { title: "Start date" },
+          { title: "End date" },
           { title: "Status" },
         ]}
         promotedBulkActions={promotedBulkActions}

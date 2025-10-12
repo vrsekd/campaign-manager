@@ -5,10 +5,13 @@
 export interface Campaign {
   id: string;
   name: string;
-  banner: string | null;
+  description: string | null;
+  checkoutBanner: string | null;
   status: CampaignStatus;
+  priority: number;
   startDate: Date | null;
   endDate: Date | null;
+  products: string | null; // JSON string of product GIDs
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,18 +20,24 @@ export type CampaignStatus = "draft" | "active" | "paused" | "completed";
 
 export interface CreateCampaignInput {
   name: string;
-  banner?: string;
+  description?: string;
+  checkoutBanner?: string;
   status?: CampaignStatus;
+  priority?: number;
   startDate?: string; // ISO string
   endDate?: string; // ISO string
+  products?: string; // JSON string
 }
 
 export interface UpdateCampaignInput {
   name?: string;
-  banner?: string;
+  description?: string;
+  checkoutBanner?: string;
   status?: CampaignStatus;
+  priority?: number;
   startDate?: string | null; // ISO string
   endDate?: string | null; // ISO string
+  products?: string | null; // JSON string
 }
 
 export interface ApiError {
