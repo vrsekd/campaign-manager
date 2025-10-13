@@ -15,6 +15,24 @@ export default function Index() {
   const { campaigns, loading, error, refetch } = useCampaigns();
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
+  const Loader = () => (
+    <div style={{ padding: "20px", textAlign: "center" }}>
+      <Spinner accessibilityLabel="Loading campaigns" size="large" />
+    </div>
+  );
+
+  const primaryAction = {
+    content: "Add campaign",
+    onAction: () => setCreateModalOpen(true),
+  };
+
+  const secondaryActions = [
+    {
+      content: "Refresh",
+      onAction: refetch,
+    },
+  ];
+
   if (error) {
     return (
       <Page fullWidth={true}>
@@ -32,16 +50,8 @@ export default function Index() {
   return (
     <Page
       title="Campaigns"
-      primaryAction={{
-        content: "Add campaign",
-        onAction: () => setCreateModalOpen(true),
-      }}
-      secondaryActions={[
-        {
-          content: "Refresh",
-          onAction: refetch,
-        },
-      ]}
+      primaryAction={primaryAction}
+      secondaryActions={secondaryActions}
       fullWidth={true}
     >
       <CampaignCreate
@@ -51,9 +61,7 @@ export default function Index() {
       />
 
       {loading ? (
-        <div style={{ padding: "20px", textAlign: "center" }}>
-          <Spinner accessibilityLabel="Loading campaigns" size="large" />
-        </div>
+        <Loader />
       ) : (
         <CampaignList
           campaigns={campaigns}

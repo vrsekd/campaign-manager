@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { z } from "zod";
 
+const campaignStatusEnum = z.enum(["draft", "active", "paused", "completed"]);
+
 const checkoutBannerSchema = z.object({
   productIds: z.array(z.string()).min(1, "At least one product ID is required"),
 });
@@ -11,25 +13,22 @@ const createCampaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   checkoutBanner: z.string().optional(),
-  status: z
-    .enum(["draft", "active", "paused", "completed"])
-    .optional()
-    .default("draft"),
+  status: campaignStatusEnum.optional().default("draft"),
   priority: z.number().int().optional().default(0),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
-  products: z.string().optional(), // JSON string
+  products: z.string().optional(),
 });
 
 const updateCampaignSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   checkoutBanner: z.string().optional(),
-  status: z.enum(["draft", "active", "paused", "completed"]).optional(),
+  status: campaignStatusEnum.optional(),
   priority: z.number().int().optional(),
   startDate: z.string().datetime().optional().nullable(),
   endDate: z.string().datetime().optional().nullable(),
-  products: z.string().optional().nullable(), // JSON string
+  products: z.string().optional().nullable(),
 });
 
 const idParamSchema = z.object({
@@ -253,7 +252,6 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // POST get checkout banner for products
   fastify.post<{ Body: CheckoutBannerBody }>(
     "/campaigns/checkout",
     async (
@@ -264,23 +262,21 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
         const { productIds } = checkoutBannerSchema.parse(request.body);
         const currentDate = new Date();
 
-        // Find all active campaigns that match the criteria
         const campaigns = await fastify.prisma.campaign.findMany({
           where: {
             status: "active",
             startDate: {
-              lte: currentDate, // Start date is less than or equal to now
+              lte: currentDate,
             },
             endDate: {
-              gte: currentDate, // End date is greater than or equal to now
+              gte: currentDate,
             },
           },
           orderBy: {
-            priority: "desc", // Highest priority first
+            priority: "desc",
           },
         });
 
-        // Find campaigns that contain any of the provided products
         for (const campaign of campaigns) {
           if (campaign.products) {
             try {
@@ -291,13 +287,11 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
                   )
                 : [];
 
-              // Check if any provided product ID matches campaign products
               const hasMatchingProduct = productIds.some((productId) =>
                 productGids.some((gid: string) => gid.includes(productId)),
               );
 
               if (hasMatchingProduct && campaign.checkoutBanner) {
-                // Return the first matching campaign's banner
                 return reply.code(200).send({
                   banner: campaign.checkoutBanner,
                   campaignId: campaign.id,
@@ -314,7 +308,6 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
           }
         }
 
-        // No matching campaign found
         return reply.code(200).send({
           banner: null,
         });
