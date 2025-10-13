@@ -1,8 +1,7 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 
-const BACKEND_URL =
-  process.env.BACKEND_URL_DIRECT || "http://localhost:3001/api";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001/api";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
