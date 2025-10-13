@@ -2,10 +2,9 @@ import {
   reactExtension,
   Banner,
   useCartLines,
+  useApi,
 } from "@shopify/ui-extensions-react/checkout";
 import { useEffect, useState } from "react";
-
-const BACKEND_URL = "https://nondipterous-flauntily-marion.ngrok-free.dev/api";
 
 export default reactExtension("purchase.checkout.header.render-after", () => (
   <Extension />
@@ -13,6 +12,7 @@ export default reactExtension("purchase.checkout.header.render-after", () => (
 
 function Extension() {
   const lines = useCartLines();
+  const { shop } = useApi();
   const [banner, setBanner] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,12 +37,13 @@ function Extension() {
           return;
         }
 
-        // Fetch banner from backend
-        const url = `${BACKEND_URL}/campaigns/checkout`;
-        console.log("[Campaign Banner] Fetching from:", url);
+        // Fetch banner through Shopify App Proxy
+        // Accessible at: https://shop.myshopify.com/apps/campaign-banner
+        const proxyUrl = `https://${shop.myshopifyDomain}/apps/campaign-banner`;
+        console.log("[Campaign Banner] Fetching from:", proxyUrl);
         console.log("[Campaign Banner] Request body:", { productIds });
 
-        const response = await fetch(url, {
+        const response = await fetch(proxyUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ productIds }),

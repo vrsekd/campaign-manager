@@ -18,7 +18,16 @@ const fastify = Fastify({
 });
 
 await fastify.register(cors, {
-  origin: true,
+  origin: [
+    "https://extensions.shopifycdn.com",
+    /\.myshopify\.com$/,
+    "https://checkout.shopify.com",
+
+    /\.trycloudflare\.com$/,
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 });
 
 fastify.decorate("prisma", prisma);

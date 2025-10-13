@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { campaignApi } from "../../services/campaign.client";
+import { getCampaignApiClient } from "../../utils/campaignApi";
+import { useShopify } from "../useShopify";
 import type { Campaign } from "../../../backend/types/campaign";
 
 interface UseCampaignReturn {
@@ -15,6 +16,7 @@ export function useCampaign(id: string | undefined): UseCampaignReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const app = useAppBridge();
+  const shopify = useShopify();
 
   const fetchCampaign = useCallback(async () => {
     if (!id) {
@@ -26,7 +28,8 @@ export function useCampaign(id: string | undefined): UseCampaignReturn {
       setLoading(true);
       setError(null);
       const idToken: string = await app.idToken();
-      const data = await campaignApi.getCampaign(id, idToken);
+      const apiClient = getCampaignApiClient(shopify.backendUrl);
+      const data = await apiClient.getCampaign(id, idToken);
       setCampaign(data);
     } catch (err) {
       const errorMessage =
@@ -36,7 +39,7 @@ export function useCampaign(id: string | undefined): UseCampaignReturn {
     } finally {
       setLoading(false);
     }
-  }, [id, app]);
+  }, [id, app, shopify.backendUrl]);
 
   useEffect(() => {
     fetchCampaign();

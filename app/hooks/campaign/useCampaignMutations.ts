@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { campaignApi } from "../../services/campaign.client";
+import { getCampaignApiClient } from "../../utils/campaignApi";
+import { useShopify } from "../useShopify";
 import type {
   Campaign,
   CreateCampaignInput,
@@ -26,6 +27,7 @@ interface UseCampaignMutationsReturn {
 
 export function useCampaignMutations(): UseCampaignMutationsReturn {
   const app = useAppBridge();
+  const shopify = useShopify();
 
   const [createState, setCreateState] = useState<MutationState>({
     loading: false,
@@ -46,10 +48,8 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
     try {
       setCreateState({ loading: true, error: null });
       const idToken = await app.idToken();
-      const campaign = await campaignApi.createCampaign(
-        data,
-        idToken as string,
-      );
+      const apiClient = getCampaignApiClient(shopify.backendUrl);
+      const campaign = await apiClient.createCampaign(data, idToken as string);
       setCreateState({ loading: false, error: null });
       return campaign;
     } catch (err) {
@@ -68,7 +68,8 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
     try {
       setUpdateState({ loading: true, error: null });
       const idToken = await app.idToken();
-      const campaign = await campaignApi.updateCampaign(
+      const apiClient = getCampaignApiClient(shopify.backendUrl);
+      const campaign = await apiClient.updateCampaign(
         id,
         data,
         idToken as string,
@@ -88,7 +89,8 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
     try {
       setDeleteState({ loading: true, error: null });
       const idToken = await app.idToken();
-      await campaignApi.deleteCampaign(id, idToken as string);
+      const apiClient = getCampaignApiClient(shopify.backendUrl);
+      await apiClient.deleteCampaign(id, idToken as string);
       setDeleteState({ loading: false, error: null });
       return true;
     } catch (err) {

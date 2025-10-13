@@ -10,10 +10,19 @@ import { authenticate } from "../shopify.server";
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
+
+  const backendUrl = process.env.BACKEND_URL || "/api/backend";
+  console.log(
+    "[app.tsx loader] BACKEND_URL from env:",
+    process.env.BACKEND_URL,
+  );
+  console.log("[app.tsx loader] Final backendUrl:", backendUrl);
 
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
+    shop: session.shop,
+    backendUrl,
   };
 };
 

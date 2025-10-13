@@ -24,8 +24,7 @@ target = "purchase.checkout.header.render-after"
 # https://shopify.dev/docs/api/checkout-ui-extensions/latest/configuration#api-access
 api_access = true
 
-# Gives your extension access to make external network calls, using the
-# JavaScript `fetch()` API. Learn more:
+# Network access not needed - using Shopify App Proxy instead
 # https://shopify.dev/docs/api/checkout-ui-extensions/latest/configuration#network-access
 network_access = true
 
