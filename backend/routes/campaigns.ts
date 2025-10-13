@@ -1,5 +1,10 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
+import {
+  authenticateShopify,
+  optionalAuth,
+  type AuthenticatedRequest,
+} from "../middleware/auth.js";
 
 const campaignStatusEnum = z.enum(["draft", "active", "paused", "completed"]);
 
@@ -42,9 +47,13 @@ type IdParam = z.infer<typeof idParamSchema>;
 export default async function campaignRoutes(fastify: FastifyInstance) {
   fastify.get(
     "/campaigns",
-    async (request: FastifyRequest, reply: FastifyReply) => {
+    { preHandler: authenticateShopify },
+    async (request: AuthenticatedRequest, reply: FastifyReply) => {
       try {
         const campaigns = await fastify.prisma.campaign.findMany({
+          where: {
+            shopId: request.shopId,
+          },
           orderBy: {
             createdAt: "desc",
           },
@@ -62,15 +71,19 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
   fastify.get<{ Params: IdParam }>(
     "/campaigns/:id",
+    { preHandler: authenticateShopify },
     async (
-      request: FastifyRequest<{ Params: IdParam }>,
+      request: AuthenticatedRequest<{ Params: IdParam }>,
       reply: FastifyReply,
     ) => {
       try {
         const { id } = idParamSchema.parse(request.params);
 
-        const campaign = await fastify.prisma.campaign.findUnique({
-          where: { id },
+        const campaign = await fastify.prisma.campaign.findFirst({
+          where: {
+            id,
+            shopId: request.shopId,
+          },
         });
 
         if (!campaign) {
@@ -100,8 +113,9 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
   fastify.post<{ Body: CreateCampaignBody }>(
     "/campaigns",
+    { preHandler: authenticateShopify },
     async (
-      request: FastifyRequest<{ Body: CreateCampaignBody }>,
+      request: AuthenticatedRequest<{ Body: CreateCampaignBody }>,
       reply: FastifyReply,
     ) => {
       try {
@@ -109,6 +123,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
         const campaign = await fastify.prisma.campaign.create({
           data: {
+            shopId: request.shopId!,
             name: validatedData.name,
             description: validatedData.description,
             checkoutBanner: validatedData.checkoutBanner,
@@ -144,16 +159,23 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
   fastify.put<{ Params: IdParam; Body: UpdateCampaignBody }>(
     "/campaigns/:id",
+    { preHandler: authenticateShopify },
     async (
-      request: FastifyRequest<{ Params: IdParam; Body: UpdateCampaignBody }>,
+      request: AuthenticatedRequest<{
+        Params: IdParam;
+        Body: UpdateCampaignBody;
+      }>,
       reply: FastifyReply,
     ) => {
       try {
         const { id } = idParamSchema.parse(request.params);
         const validatedData = updateCampaignSchema.parse(request.body);
 
-        const existingCampaign = await fastify.prisma.campaign.findUnique({
-          where: { id },
+        const existingCampaign = await fastify.prisma.campaign.findFirst({
+          where: {
+            id,
+            shopId: request.shopId,
+          },
         });
 
         if (!existingCampaign) {
@@ -212,15 +234,19 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
   fastify.delete<{ Params: IdParam }>(
     "/campaigns/:id",
+    { preHandler: authenticateShopify },
     async (
-      request: FastifyRequest<{ Params: IdParam }>,
+      request: AuthenticatedRequest<{ Params: IdParam }>,
       reply: FastifyReply,
     ) => {
       try {
         const { id } = idParamSchema.parse(request.params);
 
-        const existingCampaign = await fastify.prisma.campaign.findUnique({
-          where: { id },
+        const existingCampaign = await fastify.prisma.campaign.findFirst({
+          where: {
+            id,
+            shopId: request.shopId,
+          },
         });
 
         if (!existingCampaign) {
@@ -231,7 +257,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
         }
 
         await fastify.prisma.campaign.delete({
-          where: { id },
+          where: { id: existingCampaign.id },
         });
 
         return reply.code(204).send();
@@ -254,24 +280,31 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
   fastify.post<{ Body: CheckoutBannerBody }>(
     "/campaigns/checkout",
+    { preHandler: optionalAuth },
     async (
-      request: FastifyRequest<{ Body: CheckoutBannerBody }>,
+      request: AuthenticatedRequest<{ Body: CheckoutBannerBody }>,
       reply: FastifyReply,
     ) => {
       try {
         const { productIds } = checkoutBannerSchema.parse(request.body);
         const currentDate = new Date();
 
-        const campaigns = await fastify.prisma.campaign.findMany({
-          where: {
-            status: "active",
-            startDate: {
-              lte: currentDate,
-            },
-            endDate: {
-              gte: currentDate,
-            },
+        const whereClause: any = {
+          status: "active",
+          startDate: {
+            lte: currentDate,
           },
+          endDate: {
+            gte: currentDate,
+          },
+        };
+
+        if (request.shopId) {
+          whereClause.shopId = request.shopId;
+        }
+
+        const campaigns = await fastify.prisma.campaign.findMany({
+          where: whereClause,
           orderBy: {
             priority: "desc",
           },

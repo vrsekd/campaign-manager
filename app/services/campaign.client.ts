@@ -23,8 +23,13 @@ export class CampaignApiClient {
   /**
    * Fetch all campaigns
    */
-  async getAllCampaigns(): Promise<Campaign[]> {
-    const response = await fetch(`${this.baseUrl}/campaigns`);
+  async getAllCampaigns(idToken: string): Promise<Campaign[]> {
+    const response = await fetch(`${this.baseUrl}/campaigns`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch campaigns: ${response.statusText}`);
     }
@@ -34,8 +39,13 @@ export class CampaignApiClient {
   /**
    * Fetch a single campaign by ID
    */
-  async getCampaign(id: string): Promise<Campaign> {
-    const response = await fetch(`${this.baseUrl}/campaigns/${id}`);
+  async getCampaign(id: string, idToken: string): Promise<Campaign> {
+    const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error("Campaign not found");
@@ -48,11 +58,15 @@ export class CampaignApiClient {
   /**
    * Create a new campaign
    */
-  async createCampaign(data: CreateCampaignInput): Promise<Campaign> {
+  async createCampaign(
+    data: CreateCampaignInput,
+    idToken: string,
+  ): Promise<Campaign> {
     const response = await fetch(`${this.baseUrl}/campaigns`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
       },
       body: JSON.stringify(data),
     });
@@ -71,11 +85,13 @@ export class CampaignApiClient {
   async updateCampaign(
     id: string,
     data: UpdateCampaignInput,
+    idToken: string,
   ): Promise<Campaign> {
     const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
       },
       body: JSON.stringify(data),
     });
@@ -94,9 +110,13 @@ export class CampaignApiClient {
   /**
    * Delete a campaign
    */
-  async deleteCampaign(id: string): Promise<void> {
+  async deleteCampaign(id: string, idToken: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
     });
 
     if (!response.ok) {

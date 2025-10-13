@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAppBridge } from "@shopify/app-bridge-react";
 import { campaignApi } from "../../services/campaign.client";
 import type {
   Campaign,
@@ -24,6 +25,8 @@ interface UseCampaignMutationsReturn {
 }
 
 export function useCampaignMutations(): UseCampaignMutationsReturn {
+  const app = useAppBridge();
+
   const [createState, setCreateState] = useState<MutationState>({
     loading: false,
     error: null,
@@ -42,7 +45,11 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
   ): Promise<Campaign | undefined> => {
     try {
       setCreateState({ loading: true, error: null });
-      const campaign = await campaignApi.createCampaign(data);
+      const idToken = await app.idToken();
+      const campaign = await campaignApi.createCampaign(
+        data,
+        idToken as string,
+      );
       setCreateState({ loading: false, error: null });
       return campaign;
     } catch (err) {
@@ -60,7 +67,12 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
   ): Promise<Campaign | undefined> => {
     try {
       setUpdateState({ loading: true, error: null });
-      const campaign = await campaignApi.updateCampaign(id, data);
+      const idToken = await app.idToken();
+      const campaign = await campaignApi.updateCampaign(
+        id,
+        data,
+        idToken as string,
+      );
       setUpdateState({ loading: false, error: null });
       return campaign;
     } catch (err) {
@@ -75,7 +87,8 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
   const deleteCampaign = async (id: string): Promise<boolean> => {
     try {
       setDeleteState({ loading: true, error: null });
-      await campaignApi.deleteCampaign(id);
+      const idToken = await app.idToken();
+      await campaignApi.deleteCampaign(id, idToken as string);
       setDeleteState({ loading: false, error: null });
       return true;
     } catch (err) {

@@ -4,6 +4,7 @@ import { Page, Spinner, Banner } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import { useCampaigns } from "../hooks/campaign";
 import { CampaignList, CampaignCreate } from "../components/campaign";
+import { useAppBridge } from "@shopify/app-bridge-react";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
