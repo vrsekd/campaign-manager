@@ -3,7 +3,8 @@ import { useMatches } from "@remix-run/react";
 interface ShopifyContext {
   shop: string;
   apiKey?: string;
-  backendUrl?: string;
+  apiBackend?: string;
+  apiBackendPublic?: string;
 }
 
 /**
@@ -15,19 +16,19 @@ export function useShopify(): ShopifyContext {
 
   if (appMatch && appMatch.data) {
     const data = appMatch.data as any;
-    const backendUrl = data.backendUrl || "http://localhost:3001/api";
-
     return {
       shop: data.shop || "development.myshopify.com",
       apiKey: data.apiKey,
-      backendUrl,
+      apiBackend: data.apiBackend || "http://localhost:3001/api",
+      apiBackendPublic:
+        data.apiBackendPublic || data.apiBackend || "http://localhost:3001/api",
     };
   }
 
-  console.warn("[useShopify] No app match found");
   return {
     shop: "development.myshopify.com",
     apiKey: "",
-    backendUrl: "http://localhost:3001/api",
+    apiBackend: "http://localhost:3001/api",
+    apiBackendPublic: "http://localhost:3001/api",
   };
 }

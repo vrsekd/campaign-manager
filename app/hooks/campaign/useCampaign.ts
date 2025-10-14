@@ -29,7 +29,7 @@ export function useCampaign(id: string | undefined): UseCampaignReturn {
       setError(null);
       const idToken: string = await app.idToken();
       const data = await campaignApi.getCampaign(
-        shopify.backendUrl!,
+        shopify.apiBackend!,
         id,
         idToken,
       );
@@ -42,7 +42,7 @@ export function useCampaign(id: string | undefined): UseCampaignReturn {
     } finally {
       setLoading(false);
     }
-  }, [id, app, shopify.backendUrl]);
+  }, [id, app, shopify.apiBackend]);
 
   useEffect(() => {
     fetchCampaign();

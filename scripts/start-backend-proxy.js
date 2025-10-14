@@ -96,6 +96,9 @@ const backendHost = backendHostMatch ? backendHostMatch[1].trim() : "localhost";
 console.log(`📡 Starting ngrok proxy for backend...`);
 console.log(`   Backend: http://${backendHost}:${backendPort}`);
 
+global.backendHost = backendHost;
+global.backendPort = backendPort;
+
 // Check if ngrok is installed
 const checkNgrok = spawn("which", ["ngrok"]);
 checkNgrok.on("close", (code) => {

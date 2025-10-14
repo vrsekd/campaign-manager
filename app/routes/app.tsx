@@ -12,17 +12,23 @@ export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
 
-  const backendUrl = process.env.BACKEND_URL || "http://localhost:3001/api";
+  const apiBackend = process.env.API_BACKEND || "http://localhost:3001/api";
+  const apiBackendPublic = process.env.API_BACKEND_PUBLIC || apiBackend;
+
   console.log(
-    "[app.tsx loader] BACKEND_URL from env:",
-    process.env.BACKEND_URL,
+    "[app.tsx loader] API_BACKEND from env:",
+    process.env.API_BACKEND,
   );
-  console.log("[app.tsx loader] Final backendUrl:", backendUrl);
+  console.log(
+    "[app.tsx loader] API_BACKEND_PUBLIC from env:",
+    process.env.API_BACKEND_PUBLIC,
+  );
 
   return {
     apiKey: process.env.SHOPIFY_API_KEY || "",
     shop: session.shop,
-    backendUrl,
+    apiBackend,
+    apiBackendPublic,
   };
 };
 

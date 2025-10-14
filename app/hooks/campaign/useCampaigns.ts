@@ -24,7 +24,7 @@ export function useCampaigns(): UseCampaignsReturn {
       setError(null);
       const idToken: string = await app.idToken();
       const data = await campaignApi.getAllCampaigns(
-        shopify.backendUrl!,
+        shopify.apiBackend!,
         idToken,
       );
       setCampaigns(data);
@@ -36,7 +36,7 @@ export function useCampaigns(): UseCampaignsReturn {
     } finally {
       setLoading(false);
     }
-  }, [app, shopify.backendUrl]);
+  }, [app, shopify.apiBackend]);
 
   useEffect(() => {
     fetchCampaigns();

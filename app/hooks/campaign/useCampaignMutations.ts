@@ -49,7 +49,7 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
       setCreateState({ loading: true, error: null });
       const idToken = await app.idToken();
       const campaign = await campaignApi.createCampaign(
-        shopify.backendUrl!,
+        shopify.apiBackend!,
         data,
         idToken as string,
       );
@@ -72,7 +72,7 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
       setUpdateState({ loading: true, error: null });
       const idToken = await app.idToken();
       const campaign = await campaignApi.updateCampaign(
-        shopify.backendUrl!,
+        shopify.apiBackend!,
         id,
         data,
         idToken as string,
@@ -93,7 +93,7 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
       setDeleteState({ loading: true, error: null });
       const idToken = await app.idToken();
       await campaignApi.deleteCampaign(
-        shopify.backendUrl!,
+        shopify.apiBackend!,
         id,
         idToken as string,
       );
