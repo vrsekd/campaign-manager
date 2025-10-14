@@ -28,10 +28,12 @@ const createCampaignSchema = z
     (data) => {
       const start = new Date(data.startDate);
       const now = new Date();
+      start.setHours(0, 0, 0, 0);
+      now.setHours(0, 0, 0, 0);
       return start >= now;
     },
     {
-      message: "Start date cannot be in the past",
+      message: "Start date cannot be in the past (today is allowed)",
       path: ["startDate"],
     },
   )
@@ -39,10 +41,12 @@ const createCampaignSchema = z
     (data) => {
       const end = new Date(data.endDate);
       const now = new Date();
+      end.setHours(0, 0, 0, 0);
+      now.setHours(0, 0, 0, 0);
       return end >= now;
     },
     {
-      message: "End date cannot be in the past",
+      message: "End date cannot be in the past (today is allowed)",
       path: ["endDate"],
     },
   )
@@ -77,12 +81,15 @@ const updateCampaignSchema = z
       if (data.startDate) {
         const start = new Date(data.startDate);
         const now = new Date();
+
+        start.setHours(0, 0, 0, 0);
+        now.setHours(0, 0, 0, 0);
         return start >= now;
       }
       return true;
     },
     {
-      message: "Start date cannot be in the past",
+      message: "Start date cannot be in the past (today is allowed)",
       path: ["startDate"],
     },
   )
@@ -91,12 +98,15 @@ const updateCampaignSchema = z
       if (data.endDate) {
         const end = new Date(data.endDate);
         const now = new Date();
+
+        end.setHours(0, 0, 0, 0);
+        now.setHours(0, 0, 0, 0);
         return end >= now;
       }
       return true;
     },
     {
-      message: "End date cannot be in the past",
+      message: "End date cannot be in the past (today is allowed)",
       path: ["endDate"],
     },
   )

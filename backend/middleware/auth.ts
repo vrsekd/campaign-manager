@@ -2,10 +2,11 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { createHmac } from "crypto";
 import jwt from "jsonwebtoken";
 
-export type AuthenticatedRequest<T = any> = FastifyRequest<T> & {
-  shopDomain?: string;
-  shopId?: string;
-};
+export type AuthenticatedRequest<T = Record<string, unknown>> =
+  FastifyRequest<T> & {
+    shopDomain?: string;
+    shopId?: string;
+  };
 
 interface ShopifyJWTPayload {
   iss: string;
@@ -77,20 +78,17 @@ export async function authenticateShopify(
 
   console.log("[auth] JWT verified successfully for:", payload.dest);
 
-  // Extract shop domain from JWT (dest field contains https://shop-domain.myshopify.com)
   const shopDomain = payload.dest.replace("https://", "");
 
-  // Find or create shop
   let shop = await request.server.prisma.shop.findUnique({
     where: { shopDomain },
   });
 
   if (!shop) {
-    // Auto-create shop on first request with valid JWT
     shop = await request.server.prisma.shop.create({
       data: {
         shopDomain,
-        accessToken: "", // Will be updated via OAuth afterAuth hook
+        accessToken: "",
         scope: "",
         isActive: true,
       },
@@ -99,7 +97,6 @@ export async function authenticateShopify(
   }
 
   if (!shop.isActive) {
-    // Reactivate shop if they have a valid JWT
     console.log("[auth] Reactivating shop:", shopDomain);
     shop = await request.server.prisma.shop.update({
       where: { shopDomain },

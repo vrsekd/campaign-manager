@@ -4,7 +4,7 @@
  */
 
 interface ShopifyProduct {
-  id: string; // GID format: "gid://shopify/Product/123456789"
+  id: string;
   title?: string;
   handle?: string;
   images?: Array<{ originalSrc: string }>;

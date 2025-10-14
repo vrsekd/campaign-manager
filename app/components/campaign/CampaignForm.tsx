@@ -26,7 +26,7 @@ interface CampaignFormProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  campaign?: Campaign | null; // If provided, form is in edit mode
+  campaign?: Campaign | null;
 }
 
 export function CampaignForm({
@@ -61,7 +61,6 @@ export function CampaignForm({
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Initialize form with campaign data if in edit mode
   useEffect(() => {
     if (campaign) {
       setFormData({
@@ -77,14 +76,13 @@ export function CampaignForm({
       setSelectedEndDate(
         campaign.endDate ? new Date(campaign.endDate) : undefined,
       );
-      // Parse products if available
+
       if (campaign.products) {
         try {
           const productData = JSON.parse(campaign.products);
-          // Handle both old format (array of strings) and new format (array of objects)
+
           if (Array.isArray(productData)) {
             if (productData.length > 0 && typeof productData[0] === "string") {
-              // Old format: convert to new format
               setSelectedProducts(
                 productData.map((gid) => ({
                   id: gid,
@@ -92,7 +90,6 @@ export function CampaignForm({
                 })),
               );
             } else {
-              // New format
               setSelectedProducts(productData);
             }
           }
@@ -106,7 +103,6 @@ export function CampaignForm({
   const handleSubmit = useCallback(async () => {
     setErrorMessage(null);
 
-    // Client-side validation
     if (!formData.name.trim()) {
       setErrorMessage("Campaign name is required");
       return;
@@ -132,16 +128,22 @@ export function CampaignForm({
       return;
     }
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); // Reset to start of day for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    if (selectedStartDate < now) {
-      setErrorMessage("Start date cannot be in the past");
+    const startDateOnly = new Date(selectedStartDate);
+    startDateOnly.setHours(0, 0, 0, 0);
+
+    const endDateOnly = new Date(selectedEndDate);
+    endDateOnly.setHours(0, 0, 0, 0);
+
+    if (startDateOnly < today) {
+      setErrorMessage("Start date cannot be in the past (today is allowed)");
       return;
     }
 
-    if (selectedEndDate < now) {
-      setErrorMessage("End date cannot be in the past");
+    if (endDateOnly < today) {
+      setErrorMessage("End date cannot be in the past (today is allowed)");
       return;
     }
 
@@ -156,7 +158,6 @@ export function CampaignForm({
     }
 
     if (isEditMode && campaign) {
-      // Update existing campaign
       const updateData: UpdateCampaignInput = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
@@ -188,11 +189,9 @@ export function CampaignForm({
         }
         onClose();
       } else {
-        // Show server validation error
         setErrorMessage(updateState.error || "Failed to update campaign");
       }
     } else {
-      // Create new campaign
       const submitData: CreateCampaignInput = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
@@ -219,7 +218,7 @@ export function CampaignForm({
 
       if (created) {
         setErrorMessage(null);
-        // Reset form
+
         setFormData({
           name: "",
           description: "",
@@ -236,7 +235,6 @@ export function CampaignForm({
         }
         onClose();
       } else {
-        // Show server validation error
         setErrorMessage(createState.error || "Failed to create campaign");
       }
     }
@@ -290,7 +288,6 @@ export function CampaignForm({
 
   const handleSelectProducts = async () => {
     try {
-      // Use Shopify Resource Picker for product selection
       if (
         typeof window !== "undefined" &&
         (window as any).shopify?.resourcePicker
@@ -301,7 +298,6 @@ export function CampaignForm({
         });
 
         if (selected && selected.length > 0) {
-          // Add selected products with their IDs and titles
           const newProducts = selected
             .map((product: any) => ({
               id: product.id,
@@ -317,7 +313,6 @@ export function CampaignForm({
           }
         }
       } else {
-        // Fallback for development/testing
         setErrorMessage(
           "Product selection requires running in Shopify admin context",
         );

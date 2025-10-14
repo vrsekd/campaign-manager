@@ -26,8 +26,3 @@ scopes = "write_aducts, read_products, write_app_proxy"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
-
-[app_proxy]
-url = "/api"
-prefix = "apps"
-subpath = "campaign-banner"

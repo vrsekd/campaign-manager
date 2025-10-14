@@ -11,7 +11,7 @@ export interface Campaign {
   priority: number;
   startDate: Date | null;
   endDate: Date | null;
-  products: string | null; // JSON string of product GIDs
+  products: string | null; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,9 +24,9 @@ export interface CreateCampaignInput {
   checkoutBanner?: string;
   status?: CampaignStatus;
   priority?: number;
-  startDate?: string; // ISO string
-  endDate?: string; // ISO string
-  products?: string; // JSON string
+  startDate?: string; 
+  endDate?: string; 
+  products?: string; 
 }
 
 export interface UpdateCampaignInput {
@@ -35,9 +35,9 @@ export interface UpdateCampaignInput {
   checkoutBanner?: string;
   status?: CampaignStatus;
   priority?: number;
-  startDate?: string | null; // ISO string
-  endDate?: string | null; // ISO string
-  products?: string | null; // JSON string
+  startDate?: string | null; 
+  endDate?: string | null; 
+  products?: string | null; 
 }
 
 export interface ApiError {

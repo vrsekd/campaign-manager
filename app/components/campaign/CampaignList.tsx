@@ -86,7 +86,7 @@ export function CampaignList({
     },
   ];
 
-  // Format date for display
+  
   const formatDate = (date: Date | null) => {
     if (!date) return "Not set";
     return new Date(date).toLocaleDateString("en-US", {
@@ -97,7 +97,7 @@ export function CampaignList({
     });
   };
 
-  // Get status badge based on campaign status
+  
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
@@ -113,7 +113,7 @@ export function CampaignList({
     }
   };
 
-  // Map campaigns data to table format
+  
   const formattedCampaigns = campaigns.map((campaign) => ({
     id: campaign.id,
     name: (

@@ -153,5 +153,5 @@ export class CampaignApiClient {
   }
 }
 
-// Export a singleton instance
+
 export const campaignApi = new CampaignApiClient();
