@@ -18,7 +18,7 @@ const createCampaignSchema = z.object({
   description: z.string().optional(),
   checkoutBanner: z.string().optional(),
   status: campaignStatusEnum.optional().default("draft"),
-  priority: z.number().int().optional().default(0),
+  priority: z.number().int().optional().default(1),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   products: z.string().optional(),

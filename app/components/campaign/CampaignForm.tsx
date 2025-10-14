@@ -44,7 +44,7 @@ export function CampaignForm({
     description: "",
     checkoutBanner: "",
     status: "draft" as const,
-    priority: 0,
+    priority: 1,
   });
 
   const [startDatePickerActive, setStartDatePickerActive] = useState(false);
@@ -190,7 +190,7 @@ export function CampaignForm({
           description: "",
           checkoutBanner: "",
           status: "draft",
-          priority: 0,
+          priority: 1,
         });
         setSelectedStartDate(undefined);
         setSelectedEndDate(undefined);

@@ -29,7 +29,7 @@ model Campaign {
   description     String?
   checkoutBanner  String?
   status          String    @default("draft")
-  priority        Int       @default(0)
+  priority        Int       @default(1)
   startDate       DateTime?
   endDate         DateTime?
   products        String?
