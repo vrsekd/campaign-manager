@@ -106,8 +106,52 @@ export function CampaignForm({
   const handleSubmit = useCallback(async () => {
     setErrorMessage(null);
 
+    // Client-side validation
     if (!formData.name.trim()) {
       setErrorMessage("Campaign name is required");
+      return;
+    }
+
+    if (!formData.checkoutBanner.trim()) {
+      setErrorMessage("Checkout banner is required");
+      return;
+    }
+
+    if (formData.priority < 1) {
+      setErrorMessage("Priority must be at least 1");
+      return;
+    }
+
+    if (!selectedStartDate) {
+      setErrorMessage("Start date is required");
+      return;
+    }
+
+    if (!selectedEndDate) {
+      setErrorMessage("End date is required");
+      return;
+    }
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Reset to start of day for comparison
+
+    if (selectedStartDate < now) {
+      setErrorMessage("Start date cannot be in the past");
+      return;
+    }
+
+    if (selectedEndDate < now) {
+      setErrorMessage("End date cannot be in the past");
+      return;
+    }
+
+    if (selectedEndDate < selectedStartDate) {
+      setErrorMessage("End date must be after start date");
+      return;
+    }
+
+    if (selectedProducts.length === 0) {
+      setErrorMessage("At least one product must be selected");
       return;
     }
 
@@ -138,11 +182,13 @@ export function CampaignForm({
       const updated = await updateCampaign(campaign.id, updateData);
 
       if (updated) {
+        setErrorMessage(null);
         if (onSuccess) {
           onSuccess();
         }
         onClose();
       } else {
+        // Show server validation error
         setErrorMessage(updateState.error || "Failed to update campaign");
       }
     } else {
@@ -172,6 +218,7 @@ export function CampaignForm({
       const created = await createCampaign(submitData);
 
       if (created) {
+        setErrorMessage(null);
         // Reset form
         setFormData({
           name: "",
@@ -189,6 +236,7 @@ export function CampaignForm({
         }
         onClose();
       } else {
+        // Show server validation error
         setErrorMessage(createState.error || "Failed to create campaign");
       }
     }
@@ -321,6 +369,11 @@ export function CampaignForm({
             placeholder="e.g., Summer Sale 2025"
             autoComplete="off"
             requiredIndicator
+            error={
+              !formData.name.trim() && errorMessage?.includes("name")
+                ? errorMessage
+                : undefined
+            }
           />
 
           <TextField
@@ -345,6 +398,13 @@ export function CampaignForm({
             autoComplete="off"
             multiline={2}
             helpText="Banner text shown at checkout"
+            requiredIndicator
+            error={
+              !formData.checkoutBanner.trim() &&
+              errorMessage?.includes("banner")
+                ? errorMessage
+                : undefined
+            }
           />
 
           <FormLayout.Group>
@@ -362,10 +422,16 @@ export function CampaignForm({
               type="number"
               value={formData.priority.toString()}
               onChange={(value) =>
-                setFormData({ ...formData, priority: parseInt(value) || 0 })
+                setFormData({ ...formData, priority: parseInt(value) || 1 })
               }
               autoComplete="off"
-              helpText="Higher priority campaigns show first"
+              helpText="Higher priority campaigns show first (minimum: 1)"
+              requiredIndicator
+              error={
+                formData.priority < 1 && errorMessage?.includes("Priority")
+                  ? errorMessage
+                  : undefined
+              }
             />
           </FormLayout.Group>
 
@@ -379,7 +445,13 @@ export function CampaignForm({
                 placeholder="Select start date"
                 autoComplete="off"
                 prefix={<Icon source={CalendarIcon} />}
-                helpText="When the campaign should start"
+                helpText="When the campaign should start (required)"
+                requiredIndicator
+                error={
+                  !selectedStartDate && errorMessage?.includes("Start date")
+                    ? errorMessage
+                    : undefined
+                }
               />
             }
             onClose={() => setStartDatePickerActive(false)}
@@ -410,7 +482,13 @@ export function CampaignForm({
                 placeholder="Select end date"
                 autoComplete="off"
                 prefix={<Icon source={CalendarIcon} />}
-                helpText="When the campaign should end"
+                helpText="When the campaign should end (required)"
+                requiredIndicator
+                error={
+                  !selectedEndDate && errorMessage?.includes("End date")
+                    ? errorMessage
+                    : undefined
+                }
               />
             }
             onClose={() => setEndDatePickerActive(false)}
