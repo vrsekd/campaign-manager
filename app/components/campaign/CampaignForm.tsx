@@ -4,7 +4,6 @@ import {
   FormLayout,
   TextField,
   Select,
-  Toast,
   DatePicker,
   Popover,
   Icon,
@@ -13,6 +12,7 @@ import {
   BlockStack,
   Text,
   Tag,
+  Banner,
 } from "@shopify/polaris";
 import { CalendarIcon, ProductIcon } from "@shopify/polaris-icons";
 import { useCampaignMutations } from "../../hooks/campaign";
@@ -59,9 +59,7 @@ export function CampaignForm({
     Array<{ id: string; title: string }>
   >([]);
 
-  const [toastActive, setToastActive] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastError, setToastError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Initialize form with campaign data if in edit mode
   useEffect(() => {
@@ -106,10 +104,10 @@ export function CampaignForm({
   }, [campaign]);
 
   const handleSubmit = useCallback(async () => {
+    setErrorMessage(null);
+
     if (!formData.name.trim()) {
-      setToastMessage("Campaign name is required");
-      setToastError(true);
-      setToastActive(true);
+      setErrorMessage("Campaign name is required");
       return;
     }
 
@@ -140,18 +138,12 @@ export function CampaignForm({
       const updated = await updateCampaign(campaign.id, updateData);
 
       if (updated) {
-        setToastMessage("Campaign updated successfully");
-        setToastError(false);
-        setToastActive(true);
-
         if (onSuccess) {
           onSuccess();
         }
         onClose();
       } else {
-        setToastMessage(updateState.error || "Failed to update campaign");
-        setToastError(true);
-        setToastActive(true);
+        setErrorMessage(updateState.error || "Failed to update campaign");
       }
     } else {
       // Create new campaign
@@ -180,10 +172,6 @@ export function CampaignForm({
       const created = await createCampaign(submitData);
 
       if (created) {
-        setToastMessage("Campaign created successfully");
-        setToastError(false);
-        setToastActive(true);
-
         // Reset form
         setFormData({
           name: "",
@@ -201,9 +189,7 @@ export function CampaignForm({
         }
         onClose();
       } else {
-        setToastMessage(createState.error || "Failed to create campaign");
-        setToastError(true);
-        setToastActive(true);
+        setErrorMessage(createState.error || "Failed to create campaign");
       }
     }
   }, [
@@ -284,17 +270,13 @@ export function CampaignForm({
         }
       } else {
         // Fallback for development/testing
-        setToastMessage(
+        setErrorMessage(
           "Product selection requires running in Shopify admin context",
         );
-        setToastError(true);
-        setToastActive(true);
       }
     } catch (error) {
       console.error("Error selecting products:", error);
-      setToastMessage("Failed to select products");
-      setToastError(true);
-      setToastActive(true);
+      setErrorMessage("Failed to select products");
     }
   };
 
@@ -306,186 +288,182 @@ export function CampaignForm({
 
   const isLoading = createState.loading || updateState.loading;
 
-  const toastMarkup = toastActive ? (
-    <Toast
-      content={toastMessage}
-      onDismiss={() => setToastActive(false)}
-      error={toastError}
-    />
-  ) : null;
-
   return (
-    <>
-      {toastMarkup}
-      <Modal
-        open={open}
-        onClose={handleClose}
-        title={isEditMode ? "Edit campaign" : "Create new campaign"}
-        primaryAction={{
-          content: isEditMode ? "Save changes" : "Create campaign",
-          loading: isLoading,
-          onAction: handleSubmit,
-        }}
-        secondaryActions={[
-          {
-            content: "Cancel",
-            onAction: handleClose,
-          },
-        ]}
-      >
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title={isEditMode ? "Edit campaign" : "Create new campaign"}
+      primaryAction={{
+        content: isEditMode ? "Save changes" : "Create campaign",
+        loading: isLoading,
+        onAction: handleSubmit,
+      }}
+      secondaryActions={[
+        {
+          content: "Cancel",
+          onAction: handleClose,
+        },
+      ]}
+    >
+      {errorMessage && (
         <Modal.Section>
-          <FormLayout>
-            <TextField
-              label="Campaign name"
-              value={formData.name}
-              onChange={(value) => setFormData({ ...formData, name: value })}
-              placeholder="e.g., Summer Sale 2025"
-              autoComplete="off"
-              requiredIndicator
-            />
-
-            <TextField
-              label="Description"
-              value={formData.description}
-              onChange={(value) =>
-                setFormData({ ...formData, description: value })
-              }
-              placeholder="Campaign description"
-              autoComplete="off"
-              multiline={3}
-              helpText="Internal description of the campaign"
-            />
-
-            <TextField
-              label="Checkout banner content"
-              value={formData.checkoutBanner}
-              onChange={(value) =>
-                setFormData({ ...formData, checkoutBanner: value })
-              }
-              placeholder="e.g., Hot summer deals - up to 70% off!"
-              autoComplete="off"
-              multiline={2}
-              helpText="Banner text shown at checkout"
-            />
-
-            <FormLayout.Group>
-              <Select
-                label="Status"
-                options={statusOptions}
-                value={formData.status}
-                onChange={(value) =>
-                  setFormData({ ...formData, status: value as any })
-                }
-              />
-
-              <TextField
-                label="Priority"
-                type="number"
-                value={formData.priority.toString()}
-                onChange={(value) =>
-                  setFormData({ ...formData, priority: parseInt(value) || 0 })
-                }
-                autoComplete="off"
-                helpText="Higher priority campaigns show first"
-              />
-            </FormLayout.Group>
-
-            <Popover
-              active={startDatePickerActive}
-              activator={
-                <TextField
-                  label="Start date"
-                  value={formatDateDisplay(selectedStartDate)}
-                  onFocus={() => setStartDatePickerActive(true)}
-                  placeholder="Select start date"
-                  autoComplete="off"
-                  prefix={<Icon source={CalendarIcon} />}
-                  helpText="When the campaign should start"
-                />
-              }
-              onClose={() => setStartDatePickerActive(false)}
-            >
-              <DatePicker
-                month={
-                  selectedStartDate
-                    ? selectedStartDate.getMonth()
-                    : new Date().getMonth()
-                }
-                year={
-                  selectedStartDate
-                    ? selectedStartDate.getFullYear()
-                    : new Date().getFullYear()
-                }
-                onChange={handleStartDateChange}
-                selected={selectedStartDate}
-              />
-            </Popover>
-
-            <Popover
-              active={endDatePickerActive}
-              activator={
-                <TextField
-                  label="End date"
-                  value={formatDateDisplay(selectedEndDate)}
-                  onFocus={() => setEndDatePickerActive(true)}
-                  placeholder="Select end date"
-                  autoComplete="off"
-                  prefix={<Icon source={CalendarIcon} />}
-                  helpText="When the campaign should end"
-                />
-              }
-              onClose={() => setEndDatePickerActive(false)}
-            >
-              <DatePicker
-                month={
-                  selectedEndDate
-                    ? selectedEndDate.getMonth()
-                    : new Date().getMonth()
-                }
-                year={
-                  selectedEndDate
-                    ? selectedEndDate.getFullYear()
-                    : new Date().getFullYear()
-                }
-                onChange={handleEndDateChange}
-                selected={selectedEndDate}
-              />
-            </Popover>
-
-            <BlockStack gap="200">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h3" variant="headingSm">
-                  Products
-                </Text>
-                <Button
-                  onClick={handleSelectProducts}
-                  icon={ProductIcon}
-                  size="slim"
-                >
-                  Select products
-                </Button>
-              </InlineStack>
-
-              {selectedProducts.length > 0 ? (
-                <InlineStack gap="200" wrap>
-                  {selectedProducts.map((product) => (
-                    <Tag
-                      key={product.id}
-                      onRemove={() => handleRemoveProduct(product.id)}
-                    >
-                      {product.title}
-                    </Tag>
-                  ))}
-                </InlineStack>
-              ) : (
-                <Text as="p" variant="bodySm" tone="subdued">
-                  No products selected
-                </Text>
-              )}
-            </BlockStack>
-          </FormLayout>
+          <Banner tone="critical" onDismiss={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Banner>
         </Modal.Section>
-      </Modal>
-    </>
+      )}
+      <Modal.Section>
+        <FormLayout>
+          <TextField
+            label="Campaign name"
+            value={formData.name}
+            onChange={(value) => setFormData({ ...formData, name: value })}
+            placeholder="e.g., Summer Sale 2025"
+            autoComplete="off"
+            requiredIndicator
+          />
+
+          <TextField
+            label="Description"
+            value={formData.description}
+            onChange={(value) =>
+              setFormData({ ...formData, description: value })
+            }
+            placeholder="Campaign description"
+            autoComplete="off"
+            multiline={3}
+            helpText="Internal description of the campaign"
+          />
+
+          <TextField
+            label="Checkout banner content"
+            value={formData.checkoutBanner}
+            onChange={(value) =>
+              setFormData({ ...formData, checkoutBanner: value })
+            }
+            placeholder="e.g., Hot summer deals - up to 70% off!"
+            autoComplete="off"
+            multiline={2}
+            helpText="Banner text shown at checkout"
+          />
+
+          <FormLayout.Group>
+            <Select
+              label="Status"
+              options={statusOptions}
+              value={formData.status}
+              onChange={(value) =>
+                setFormData({ ...formData, status: value as any })
+              }
+            />
+
+            <TextField
+              label="Priority"
+              type="number"
+              value={formData.priority.toString()}
+              onChange={(value) =>
+                setFormData({ ...formData, priority: parseInt(value) || 0 })
+              }
+              autoComplete="off"
+              helpText="Higher priority campaigns show first"
+            />
+          </FormLayout.Group>
+
+          <Popover
+            active={startDatePickerActive}
+            activator={
+              <TextField
+                label="Start date"
+                value={formatDateDisplay(selectedStartDate)}
+                onFocus={() => setStartDatePickerActive(true)}
+                placeholder="Select start date"
+                autoComplete="off"
+                prefix={<Icon source={CalendarIcon} />}
+                helpText="When the campaign should start"
+              />
+            }
+            onClose={() => setStartDatePickerActive(false)}
+          >
+            <DatePicker
+              month={
+                selectedStartDate
+                  ? selectedStartDate.getMonth()
+                  : new Date().getMonth()
+              }
+              year={
+                selectedStartDate
+                  ? selectedStartDate.getFullYear()
+                  : new Date().getFullYear()
+              }
+              onChange={handleStartDateChange}
+              selected={selectedStartDate}
+            />
+          </Popover>
+
+          <Popover
+            active={endDatePickerActive}
+            activator={
+              <TextField
+                label="End date"
+                value={formatDateDisplay(selectedEndDate)}
+                onFocus={() => setEndDatePickerActive(true)}
+                placeholder="Select end date"
+                autoComplete="off"
+                prefix={<Icon source={CalendarIcon} />}
+                helpText="When the campaign should end"
+              />
+            }
+            onClose={() => setEndDatePickerActive(false)}
+          >
+            <DatePicker
+              month={
+                selectedEndDate
+                  ? selectedEndDate.getMonth()
+                  : new Date().getMonth()
+              }
+              year={
+                selectedEndDate
+                  ? selectedEndDate.getFullYear()
+                  : new Date().getFullYear()
+              }
+              onChange={handleEndDateChange}
+              selected={selectedEndDate}
+            />
+          </Popover>
+
+          <BlockStack gap="200">
+            <InlineStack align="space-between" blockAlign="center">
+              <Text as="h3" variant="headingSm">
+                Products
+              </Text>
+              <Button
+                onClick={handleSelectProducts}
+                icon={ProductIcon}
+                size="slim"
+              >
+                Select products
+              </Button>
+            </InlineStack>
+
+            {selectedProducts.length > 0 ? (
+              <InlineStack gap="200" wrap>
+                {selectedProducts.map((product) => (
+                  <Tag
+                    key={product.id}
+                    onRemove={() => handleRemoveProduct(product.id)}
+                  >
+                    {product.title}
+                  </Tag>
+                ))}
+              </InlineStack>
+            ) : (
+              <Text as="p" variant="bodySm" tone="subdued">
+                No products selected
+              </Text>
+            )}
+          </BlockStack>
+        </FormLayout>
+      </Modal.Section>
+    </Modal>
   );
 }
