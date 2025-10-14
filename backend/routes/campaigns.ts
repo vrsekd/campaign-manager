@@ -2,7 +2,6 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { z } from "zod";
 import {
   authenticateShopify,
-  optionalAuth,
   type AuthenticatedRequest,
 } from "../middleware/auth.js";
 
@@ -280,7 +279,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
   fastify.post<{ Body: CheckoutBannerBody }>(
     "/campaigns/checkout",
-    { preHandler: optionalAuth },
+    { preHandler: authenticateShopify },
     async (
       request: AuthenticatedRequest<{ Body: CheckoutBannerBody }>,
       reply: FastifyReply,

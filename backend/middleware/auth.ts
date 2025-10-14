@@ -111,33 +111,6 @@ export async function authenticateShopify(
   request.shopId = shop.id;
 }
 
-export async function optionalAuth(
-  request: AuthenticatedRequest,
-  reply: FastifyReply,
-) {
-  const authHeader = request.headers.authorization;
-  const apiSecret = process.env.SHOPIFY_API_SECRET;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ") || !apiSecret) {
-    return;
-  }
-
-  const token = authHeader.substring(7);
-  const payload = await verifyShopifyJWT(token, apiSecret);
-
-  if (payload) {
-    const shopDomain = payload.dest.replace("https://", "");
-    const shop = await request.server.prisma.shop.findUnique({
-      where: { shopDomain },
-    });
-
-    if (shop && shop.isActive) {
-      request.shopDomain = shopDomain;
-      request.shopId = shop.id;
-    }
-  }
-}
-
 export function verifyShopifyWebhook(
   body: string,
   hmacHeader: string,

@@ -12,18 +12,16 @@ export default reactExtension("purchase.checkout.header.render-after", () => (
 
 function Extension() {
   const lines = useCartLines();
-  const { shop } = useApi();
   const [banner, setBanner] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { sessionToken } = useApi();
 
   useEffect(() => {
     async function fetchBanner() {
       try {
-        // Extract product IDs from cart lines
         const productIds = lines
           .map((line) => {
             const productId = line.merchandise.product.id;
-            // Extract numeric ID from GID (e.g., "gid://shopify/Product/123" -> "123")
             return productId.split("/").pop() || "";
           })
           .filter((id) => id);
@@ -36,16 +34,17 @@ function Extension() {
           setLoading(false);
           return;
         }
-
-        // Fetch banner through Shopify App Proxy
-        // Accessible at: https://shop.myshopify.com/apps/campaign-banner
-        const proxyUrl = `https://${shop.myshopifyDomain}/apps/campaign-banner`;
-        console.log("[Campaign Banner] Fetching from:", proxyUrl);
+        const backendUrl = `${process.env.BACKEND_URL}/campaigns/checkout`;
+        console.log("[Campaign Banner] Fetching from:", backendUrl);
         console.log("[Campaign Banner] Request body:", { productIds });
 
-        const response = await fetch(proxyUrl, {
+        const currentToken = await sessionToken.get();
+        const response = await fetch(backendUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentToken}`,
+          },
           body: JSON.stringify({ productIds }),
         });
 

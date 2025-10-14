@@ -2,6 +2,7 @@
   "name": "campaign-manager",
   "private": true,
   "scripts": {
+    "backend:proxy": "node scripts/start-backend-proxy.js",
     "build": "remix vite:build",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",

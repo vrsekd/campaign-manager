@@ -22,12 +22,14 @@ await fastify.register(cors, {
     "https://extensions.shopifycdn.com",
     /\.myshopify\.com$/,
     "https://checkout.shopify.com",
-
     /\.trycloudflare\.com$/,
+    /\.ngrok-free\.dev$/,
+    /\.ngrok\.io$/,
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Shopify-Access-Token"],
+  exposedHeaders: ["Content-Type"],
 });
 
 fastify.decorate("prisma", prisma);
