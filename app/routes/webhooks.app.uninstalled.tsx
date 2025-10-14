@@ -7,8 +7,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   console.log(`Received ${topic} webhook for ${shop}`);
 
-  
-  
   if (session) {
     await db.session.deleteMany({ where: { shop } });
   }
