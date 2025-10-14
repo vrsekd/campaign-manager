@@ -10,17 +10,33 @@ datasource db {
   url      = "file:./dev.sqlite"
 }
 
+model Shop {
+  id          String     @id @default(uuid())
+  shopDomain  String     @unique
+  accessToken String
+  scope       String?
+  isActive    Boolean    @default(true)
+  campaigns   Campaign[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
 model Campaign {
   id              String    @id @default(uuid())
+  shopId          String
+  shop            Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   name            String
   description     String?
   checkoutBanner  String?
-  status          String    @default("draft") // draft, active, paused, completed
+  status          String    @default("draft")
   priority        Int       @default(0)
   startDate       DateTime?
   endDate         DateTime?
-  products        String?   // JSON string of product GIDs
+  products        String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  @@index([shopId])
+  @@index([shopId, status])
 }
 
