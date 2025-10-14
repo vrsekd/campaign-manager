@@ -12,7 +12,7 @@ export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
 
-  const backendUrl = process.env.BACKEND_URL || "/api/backend";
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:3001/api";
   console.log(
     "[app.tsx loader] BACKEND_URL from env:",
     process.env.BACKEND_URL,

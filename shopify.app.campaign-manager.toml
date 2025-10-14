@@ -1,9 +1,13 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "235a1ada56f259be5c3168eb7bd3ebd6"
-name = "Campaign manager"
+client_id = "38a2353e4b89bd19e6edc29a01c7f211"
+name = "campaign-manager"
 application_url = "https://example.com"
 embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-01"
@@ -14,6 +18,3 @@ scopes = "read_products"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
-
-[build]
-automatically_update_urls_on_dev = true
