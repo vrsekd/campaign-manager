@@ -1,40 +1,20 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { PrismaClient } from "@prisma/client";
+import { corsConfig } from "./config/cors.js";
+import { loggerConfig } from "./config/logger.js";
 import campaignRoutes from "./routes/campaigns.js";
 import healthRoutes from "./routes/health.js";
 
 const prisma = new PrismaClient();
 const fastify = Fastify({
-  logger: {
-    transport: {
-      target: "pino-pretty",
-      options: {
-        translateTime: "HH:MM:ss Z",
-        ignore: "pid,hostname",
-      },
-    },
-  },
-});
-
-await fastify.register(cors, {
-  origin: [
-    "https://extensions.shopifycdn.com",
-    /\.myshopify\.com$/,
-    "https://checkout.shopify.com",
-    /\.trycloudflare\.com$/,
-    /\.ngrok-free\.dev$/,
-    /\.ngrok\.io$/,
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Shopify-Access-Token"],
-  exposedHeaders: ["Content-Type"],
+  logger: loggerConfig,
 });
 
 fastify.decorate("prisma", prisma);
-
+fastify.register(cors, corsConfig);
 fastify.register(healthRoutes);
+
 fastify.register(campaignRoutes, { prefix: "/api" });
 
 const closeGracefully = async (signal: string) => {
@@ -47,7 +27,7 @@ const closeGracefully = async (signal: string) => {
 process.on("SIGINT", () => closeGracefully("SIGINT"));
 process.on("SIGTERM", () => closeGracefully("SIGTERM"));
 
-const start = async () => {
+const startServer = async () => {
   try {
     const port = parseInt(process.env.BACKEND_PORT || "3001", 10);
     const host = process.env.BACKEND_HOST || "0.0.0.0";
@@ -61,10 +41,4 @@ const start = async () => {
   }
 };
 
-start();
-
-declare module "fastify" {
-  interface FastifyInstance {
-    prisma: PrismaClient;
-  }
-}
+startServer();

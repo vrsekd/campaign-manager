@@ -1,24 +1,7 @@
-import type { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyReply } from "fastify";
 import { createHmac } from "crypto";
 import jwt from "jsonwebtoken";
-
-export type AuthenticatedRequest<T = Record<string, unknown>> =
-  FastifyRequest<T> & {
-    shopDomain?: string;
-    shopId?: string;
-  };
-
-interface ShopifyJWTPayload {
-  iss: string;
-  dest: string;
-  aud: string;
-  sub: string;
-  exp: number;
-  nbf: number;
-  iat: number;
-  jti: string;
-  sid: string;
-}
+import type { AuthenticatedRequest, ShopifyJWTPayload } from "../types/auth.js";
 
 async function verifyShopifyJWT(
   token: string,
