@@ -76,7 +76,7 @@ function Extension() {
     }
 
     fetchBanner();
-  }, [lines]);
+  }, [lines, sessionToken]);
 
   if (loading || !banner) {
     return null;
