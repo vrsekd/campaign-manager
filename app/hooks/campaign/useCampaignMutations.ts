@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAppBridge } from "@shopify/app-bridge-react";
-import { getCampaignApiClient } from "../../utils/campaignApi";
+import * as campaignApi from "../../services/campaign.client";
 import { useShopify } from "../useShopify";
 import type {
   Campaign,
@@ -48,8 +48,11 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
     try {
       setCreateState({ loading: true, error: null });
       const idToken = await app.idToken();
-      const apiClient = getCampaignApiClient(shopify.backendUrl);
-      const campaign = await apiClient.createCampaign(data, idToken as string);
+      const campaign = await campaignApi.createCampaign(
+        shopify.backendUrl!,
+        data,
+        idToken as string,
+      );
       setCreateState({ loading: false, error: null });
       return campaign;
     } catch (err) {
@@ -68,8 +71,8 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
     try {
       setUpdateState({ loading: true, error: null });
       const idToken = await app.idToken();
-      const apiClient = getCampaignApiClient(shopify.backendUrl);
-      const campaign = await apiClient.updateCampaign(
+      const campaign = await campaignApi.updateCampaign(
+        shopify.backendUrl!,
         id,
         data,
         idToken as string,
@@ -89,8 +92,11 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
     try {
       setDeleteState({ loading: true, error: null });
       const idToken = await app.idToken();
-      const apiClient = getCampaignApiClient(shopify.backendUrl);
-      await apiClient.deleteCampaign(id, idToken as string);
+      await campaignApi.deleteCampaign(
+        shopify.backendUrl!,
+        id,
+        idToken as string,
+      );
       setDeleteState({ loading: false, error: null });
       return true;
     } catch (err) {

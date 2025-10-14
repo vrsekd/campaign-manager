@@ -4,127 +4,130 @@ import type {
   UpdateCampaignInput,
 } from "../../backend/types/campaign";
 
-export class CampaignApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || "/api";
+async function fetchWithAuth(
+  url: string,
+  idToken: string,
+  options: RequestInit = {},
+) {
+  if (!url) {
+    throw new Error("URL is required");
+  }
+  if (!idToken) {
+    throw new Error("ID token is required");
   }
 
-  async getAllCampaigns(idToken: string): Promise<Campaign[]> {
-    const response = await fetch(`${this.baseUrl}/campaigns`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch campaigns: ${response.statusText}`);
-    }
-    return response.json();
-  }
-
-  async getCampaign(id: string, idToken: string): Promise<Campaign> {
-    const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
-      },
-    });
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error("Campaign not found");
-      }
-      throw new Error(`Failed to fetch campaign: ${response.statusText}`);
-    }
-    return response.json();
-  }
-
-  async createCampaign(
-    data: CreateCampaignInput,
-    idToken: string,
-  ): Promise<Campaign> {
-    const response = await fetch(`${this.baseUrl}/campaigns`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to create campaign");
-    }
-
-    return response.json();
-  }
-
-  async updateCampaign(
-    id: string,
-    data: UpdateCampaignInput,
-    idToken: string,
-  ): Promise<Campaign> {
-    const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error("Campaign not found");
-      }
-      const error = await response.json();
-      throw new Error(error.message || "Failed to update campaign");
-    }
-
-    return response.json();
-  }
-
-  async deleteCampaign(id: string, idToken: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${idToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error("Campaign not found");
-      }
-      throw new Error(`Failed to delete campaign: ${response.statusText}`);
-    }
-  }
-
-  async getCheckoutBanner(productIds: string[]): Promise<{
-    banner: string | null;
-    campaignId?: string;
-    campaignName?: string;
-    priority?: number;
-  }> {
-    const response = await fetch(`${this.baseUrl}/campaigns/checkout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ productIds }),
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch checkout banner: ${response.statusText}`,
-      );
-    }
-
-    return response.json();
-  }
+  return fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
 }
 
-export const campaignApi = new CampaignApiClient();
+export async function getAllCampaigns(
+  baseUrl: string,
+  idToken: string,
+): Promise<Campaign[]> {
+  const response = await fetchWithAuth(`${baseUrl}/campaigns`, idToken);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch campaigns: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function getCampaign(
+  baseUrl: string,
+  id: string,
+  idToken: string,
+): Promise<Campaign> {
+  if (!id) {
+    throw new Error("Campaign ID is required");
+  }
+
+  const response = await fetchWithAuth(`${baseUrl}/campaigns/${id}`, idToken);
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Campaign not found");
+    }
+    throw new Error(`Failed to fetch campaign: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function createCampaign(
+  baseUrl: string,
+  data: CreateCampaignInput,
+  idToken: string,
+): Promise<Campaign> {
+  if (!data) {
+    throw new Error("Campaign data is required");
+  }
+
+  const response = await fetchWithAuth(`${baseUrl}/campaigns`, idToken, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to create campaign");
+  }
+
+  return response.json();
+}
+
+export async function updateCampaign(
+  baseUrl: string,
+  id: string,
+  data: UpdateCampaignInput,
+  idToken: string,
+): Promise<Campaign> {
+  if (!id) {
+    throw new Error("Campaign ID is required");
+  }
+  if (!data) {
+    throw new Error("Campaign data is required");
+  }
+
+  const response = await fetchWithAuth(`${baseUrl}/campaigns/${id}`, idToken, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Campaign not found");
+    }
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to update campaign");
+  }
+
+  return response.json();
+}
+
+export async function deleteCampaign(
+  baseUrl: string,
+  id: string,
+  idToken: string,
+): Promise<void> {
+  if (!id) {
+    throw new Error("Campaign ID is required");
+  }
+
+  const response = await fetchWithAuth(`${baseUrl}/campaigns/${id}`, idToken, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Campaign not found");
+    }
+    throw new Error(`Failed to delete campaign: ${response.statusText}`);
+  }
+}

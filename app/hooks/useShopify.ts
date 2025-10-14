@@ -15,9 +15,7 @@ export function useShopify(): ShopifyContext {
 
   if (appMatch && appMatch.data) {
     const data = appMatch.data as any;
-    console.log("[useShopify] Loader data:", data);
-    const backendUrl = data.backendUrl || "/api/backend";
-    console.log("[useShopify] Backend URL:", backendUrl);
+    const backendUrl = data.backendUrl || "http://localhost:3001/api";
 
     return {
       shop: data.shop || "development.myshopify.com",
@@ -30,6 +28,6 @@ export function useShopify(): ShopifyContext {
   return {
     shop: "development.myshopify.com",
     apiKey: "",
-    backendUrl: "/api/backend",
+    backendUrl: "http://localhost:3001/api",
   };
 }
