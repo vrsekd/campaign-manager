@@ -1,10 +1,3 @@
-/**
- * Campaign API Client for Frontend
- *
- * This service provides methods to interact with the Fastify backend API
- * for campaign management.
- */
-
 import type {
   Campaign,
   CreateCampaignInput,
@@ -18,9 +11,6 @@ export class CampaignApiClient {
     this.baseUrl = baseUrl || "/api";
   }
 
-  /**
-   * Fetch all campaigns
-   */
   async getAllCampaigns(idToken: string): Promise<Campaign[]> {
     const response = await fetch(`${this.baseUrl}/campaigns`, {
       headers: {
@@ -34,9 +24,6 @@ export class CampaignApiClient {
     return response.json();
   }
 
-  /**
-   * Fetch a single campaign by ID
-   */
   async getCampaign(id: string, idToken: string): Promise<Campaign> {
     const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
       headers: {
@@ -53,9 +40,6 @@ export class CampaignApiClient {
     return response.json();
   }
 
-  /**
-   * Create a new campaign
-   */
   async createCampaign(
     data: CreateCampaignInput,
     idToken: string,
@@ -77,9 +61,6 @@ export class CampaignApiClient {
     return response.json();
   }
 
-  /**
-   * Update an existing campaign
-   */
   async updateCampaign(
     id: string,
     data: UpdateCampaignInput,
@@ -105,9 +86,6 @@ export class CampaignApiClient {
     return response.json();
   }
 
-  /**
-   * Delete a campaign
-   */
   async deleteCampaign(id: string, idToken: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/campaigns/${id}`, {
       method: "DELETE",
@@ -125,10 +103,6 @@ export class CampaignApiClient {
     }
   }
 
-  /**
-   * Get checkout banner for products
-   * Returns banner text if any active campaign matches the provided products
-   */
   async getCheckoutBanner(productIds: string[]): Promise<{
     banner: string | null;
     campaignId?: string;
@@ -152,6 +126,5 @@ export class CampaignApiClient {
     return response.json();
   }
 }
-
 
 export const campaignApi = new CampaignApiClient();

@@ -55,25 +55,18 @@ export class CampaignService {
       return null;
     }
 
-    const updateData: any = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.description !== undefined)
-      updateData.description = data.description;
-    if (data.checkoutBanner !== undefined)
-      updateData.checkoutBanner = data.checkoutBanner;
-    if (data.status !== undefined) updateData.status = data.status;
-    if (data.priority !== undefined) updateData.priority = data.priority;
-    if (data.startDate !== undefined) {
-      updateData.startDate = data.startDate ? new Date(data.startDate) : null;
-    }
-    if (data.endDate !== undefined) {
-      updateData.endDate = data.endDate ? new Date(data.endDate) : null;
-    }
-    if (data.products !== undefined) updateData.products = data.products;
-
     return this.prisma.campaign.update({
       where: { id },
-      data: updateData,
+      data: {
+        name: data.name,
+        description: data.description,
+        checkoutBanner: data.checkoutBanner,
+        status: data.status,
+        priority: data.priority,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        products: data.products,
+      },
     });
   }
 
