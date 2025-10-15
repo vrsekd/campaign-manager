@@ -33,6 +33,27 @@ This app is used to create marketing campaigns that based on specified rules ren
               3. Checkout Extension fetches active campaigns from Backend)
 ```
 
+## Tests
+
+There is a single test in backend part as a showcase, to run it navigate to backend folder and run `npm run test`
+
+# This is not a production grade app and repository there is a list of TODOs that would need to be resolved to make it production ready
+
+- Real database instance with backup
+- Real logger with retention
+- More tests + playwright e2e tests
+- Most of the env variables loaded from secret manager (1Password, Google secret manager etc..)
+- Release in merge / tag / release creation on GitHub
+- Advanced filtering, search and pagination
+- Integrate with Shopify campaign instead of custom app if possible
+- Security scans in pipeline
+- Localisation
+- Pre-push hooks (linters, prettier)
+- Optimise local.env Developer experience (reduce copy & paste config to make if fully automated)
+- Add mechanism to setup CORS headers only for PROD urls (based on registered shops, added NGROK to dev env only)
+- Console logs in PROD logging only with —verbose flag
+- Production deployment fixes (valid urls, full oAuth flow etc)
+
 ## Quick start (Dev)
 
 ### Prerequisites
