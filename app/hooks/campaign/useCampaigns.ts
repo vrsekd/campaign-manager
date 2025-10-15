@@ -3,13 +3,7 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import * as campaignApi from "../../services/campaign.client";
 import { useShopify } from "../useShopify";
 import type { Campaign } from "../../../backend/types/campaign";
-
-interface UseCampaignsReturn {
-  campaigns: Campaign[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-}
+import type { UseCampaignsReturn } from "../../types/hooks";
 
 export function useCampaigns(): UseCampaignsReturn {
   const app = useAppBridge();

@@ -182,14 +182,14 @@ export function CampaignForm({
 
       const updated = await updateCampaign(campaign.id, updateData);
 
-      if (updated) {
+      if (updated.success) {
         setErrorMessage(null);
         if (onSuccess) {
           onSuccess();
         }
         onClose();
       } else {
-        setErrorMessage(updateState.error || "Failed to update campaign");
+        setErrorMessage(updated.error);
       }
     } else {
       const submitData: CreateCampaignInput = {
@@ -216,7 +216,7 @@ export function CampaignForm({
 
       const created = await createCampaign(submitData);
 
-      if (created) {
+      if (created.success) {
         setErrorMessage(null);
 
         setFormData({
@@ -230,12 +230,14 @@ export function CampaignForm({
         setSelectedEndDate(undefined);
         setSelectedProducts([]);
 
-        if (onSuccess) {
-          onSuccess();
+        if (created.success) {
+          if (onSuccess) {
+            onSuccess();
+          }
         }
         onClose();
       } else {
-        setErrorMessage(createState.error || "Failed to create campaign");
+        setErrorMessage(created.error);
       }
     }
   }, [
@@ -247,8 +249,6 @@ export function CampaignForm({
     selectedProducts,
     createCampaign,
     updateCampaign,
-    createState.error,
-    updateState.error,
     onSuccess,
     onClose,
   ]);

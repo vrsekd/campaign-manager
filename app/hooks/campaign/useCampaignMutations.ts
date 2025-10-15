@@ -7,23 +7,11 @@ import type {
   CreateCampaignInput,
   UpdateCampaignInput,
 } from "../../../backend/types/campaign";
-
-interface MutationState {
-  loading: boolean;
-  error: string | null;
-}
-
-interface UseCampaignMutationsReturn {
-  createCampaign: (data: CreateCampaignInput) => Promise<Campaign | undefined>;
-  updateCampaign: (
-    id: string,
-    data: UpdateCampaignInput,
-  ) => Promise<Campaign | undefined>;
-  deleteCampaign: (id: string) => Promise<boolean>;
-  createState: MutationState;
-  updateState: MutationState;
-  deleteState: MutationState;
-}
+import type {
+  MutationState,
+  UseCampaignMutationsReturn,
+  MutationResult,
+} from "../../types/hooks";
 
 export function useCampaignMutations(): UseCampaignMutationsReturn {
   const app = useAppBridge();
@@ -44,7 +32,7 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
 
   const createCampaign = async (
     data: CreateCampaignInput,
-  ): Promise<Campaign | undefined> => {
+  ): Promise<MutationResult<Campaign>> => {
     try {
       setCreateState({ loading: true, error: null });
       const idToken = await app.idToken();
@@ -54,20 +42,20 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
         idToken as string,
       );
       setCreateState({ loading: false, error: null });
-      return campaign;
+      return { data: campaign, success: true, error: null };
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to create campaign";
       setCreateState({ loading: false, error: errorMessage });
       console.error("Error creating campaign:", err);
-      return undefined;
+      return { data: null, success: false, error: errorMessage };
     }
   };
 
   const updateCampaign = async (
     id: string,
     data: UpdateCampaignInput,
-  ): Promise<Campaign | undefined> => {
+  ): Promise<MutationResult<Campaign>> => {
     try {
       setUpdateState({ loading: true, error: null });
       const idToken = await app.idToken();
@@ -78,17 +66,19 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
         idToken as string,
       );
       setUpdateState({ loading: false, error: null });
-      return campaign;
+      return { data: campaign, success: true, error: null };
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update campaign";
       setUpdateState({ loading: false, error: errorMessage });
       console.error("Error updating campaign:", err);
-      return undefined;
+      return { data: null, success: false, error: errorMessage };
     }
   };
 
-  const deleteCampaign = async (id: string): Promise<boolean> => {
+  const deleteCampaign = async (
+    id: string,
+  ): Promise<MutationResult<Campaign>> => {
     try {
       setDeleteState({ loading: true, error: null });
       const idToken = await app.idToken();
@@ -98,13 +88,13 @@ export function useCampaignMutations(): UseCampaignMutationsReturn {
         idToken as string,
       );
       setDeleteState({ loading: false, error: null });
-      return true;
+      return { data: null, success: true, error: null };
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete campaign";
       setDeleteState({ loading: false, error: errorMessage });
       console.error("Error deleting campaign:", err);
-      return false;
+      return { data: null, success: false, error: errorMessage };
     }
   };
 

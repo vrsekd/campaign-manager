@@ -23,12 +23,7 @@ export default async function shopRoutes(fastify: FastifyInstance) {
           shop: result.shop,
         });
       } catch (error) {
-        return ErrorHandler.handleError(
-          error,
-          reply,
-          fastify.log,
-          "Failed to register shop",
-        );
+        return ErrorHandler.handleError(error, reply, fastify.log);
       }
     },
   );
@@ -46,12 +41,7 @@ export default async function shopRoutes(fastify: FastifyInstance) {
         message: "Shop deactivated",
       });
     } catch (error) {
-      return ErrorHandler.handleError(
-        error,
-        reply,
-        fastify.log,
-        "Failed to deactivate shop",
-      );
+      return ErrorHandler.handleError(error, reply, fastify.log);
     }
   });
 }

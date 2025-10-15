@@ -10,6 +10,22 @@ export class CampaignService {
     this.prisma = prisma;
   }
 
+  private async checkPriorityAvailability(
+    data: CreateCampaignBody | UpdateCampaignBody,
+    shopId: string,
+    id?: string,
+  ): Promise<void> {
+    const campaignWithTheSamePriority = await this.prisma.campaign.findFirst({
+      where: { shopId, priority: data.priority, id: { not: id } },
+    });
+
+    if (campaignWithTheSamePriority) {
+      throw new Error(
+        `Priority ${data.priority} is already used by campaign "${campaignWithTheSamePriority.name}"`,
+      );
+    }
+  }
+
   async getAllCampaigns(shopId: string): Promise<PrismaCampaign[]> {
     return this.prisma.campaign.findMany({
       where: { shopId },
@@ -30,6 +46,7 @@ export class CampaignService {
     data: CreateCampaignBody,
     shopId: string,
   ): Promise<PrismaCampaign> {
+    await this.checkPriorityAvailability(data, shopId);
     return this.prisma.campaign.create({
       data: {
         shopId,
@@ -50,6 +67,7 @@ export class CampaignService {
     data: UpdateCampaignBody,
     shopId: string,
   ): Promise<PrismaCampaign | null> {
+    await this.checkPriorityAvailability(data, shopId, id);
     const existing = await this.getCampaignById(id, shopId);
     if (!existing) {
       return null;

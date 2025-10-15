@@ -28,12 +28,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
         );
         return reply.code(200).send(campaigns);
       } catch (error) {
-        return ErrorHandler.handleError(
-          error,
-          reply,
-          fastify.log,
-          "Failed to fetch campaigns",
-        );
+        return ErrorHandler.handleError(error, reply, fastify.log);
       }
     },
   );
@@ -58,12 +53,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
         return reply.code(200).send(campaign);
       } catch (error) {
-        return ErrorHandler.handleError(
-          error,
-          reply,
-          fastify.log,
-          "Failed to fetch campaign",
-        );
+        return ErrorHandler.handleError(error, reply, fastify.log);
       }
     },
   );
@@ -84,12 +74,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
         return reply.code(201).send(campaign);
       } catch (error) {
-        return ErrorHandler.handleError(
-          error,
-          reply,
-          fastify.log,
-          "Failed to create campaign",
-        );
+        return ErrorHandler.handleError(error, reply, fastify.log);
       }
     },
   );
@@ -120,12 +105,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
         return reply.code(200).send(campaign);
       } catch (error) {
-        return ErrorHandler.handleError(
-          error,
-          reply,
-          fastify.log,
-          "Failed to update campaign",
-        );
+        return ErrorHandler.handleError(error, reply, fastify.log);
       }
     },
   );
@@ -150,12 +130,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
         return reply.code(204).send();
       } catch (error) {
-        return ErrorHandler.handleError(
-          error,
-          reply,
-          fastify.log,
-          "Failed to delete campaign",
-        );
+        return ErrorHandler.handleError(error, reply, fastify.log);
       }
     },
   );
@@ -176,12 +151,7 @@ export default async function campaignRoutes(fastify: FastifyInstance) {
 
         return reply.code(200).send(result);
       } catch (error) {
-        return ErrorHandler.handleError(
-          error,
-          reply,
-          fastify.log,
-          "Failed to fetch checkout banner",
-        );
+        return ErrorHandler.handleError(error, reply, fastify.log);
       }
     },
   );
